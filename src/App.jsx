@@ -43,6 +43,9 @@ export default function App() {
     const [expanded, setExpanded] = useState(null);
     const [buhTab, setBuhTab] = useState('analytics');
     const [period, setPeriod] = useState('day');
+    const [calendarDate, setCalendarDate] = useState(new Date());
+    const [selectedDay, setSelectedDay] = useState(null);
+    const [showCalendar, setShowCalendar] = useState(false);
 
     // Kirim Form (Pachka System)
     const [sizeMode, setSizeMode] = useState('num');
@@ -524,6 +527,128 @@ export default function App() {
                             <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Ombor</h2>
                             <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2 }}>{products.length} TA MAHSULOT</div>
                         </div>
+
+                        {/* KALENDAR */}
+                        <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowCalendar(!showCalendar)} style={{ background: `linear-gradient(135deg, ${T.accent}15, ${T.accent}05)`, padding: '18px 22px', borderRadius: 28, border: `1px solid ${T.accent}30`, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{ width: 40, height: 40, borderRadius: 14, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Calendar size={20} color={T.accent} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2 }}>KUNLIK TAHLIL</div>
+                                    <div style={{ fontSize: 14, fontWeight: '800', marginTop: 2 }}>{selectedDay ? new Date(calendarDate.getFullYear(), calendarDate.getMonth(), selectedDay).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Kunni tanlang'}</div>
+                                </div>
+                            </div>
+                            <ChevronDown size={18} color={T.muted} style={{ transform: showCalendar ? 'rotate(180deg)' : 'rotate(0)', transition: '0.3s' }} />
+                        </motion.div>
+
+                        <AnimatePresence>
+                            {showCalendar && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ marginBottom: 25, overflow: 'hidden' }}>
+                                    <div style={{ background: T.card, borderRadius: 36, padding: 20, border: `1px solid ${T.border}`, boxShadow: `0 20px 40px ${T.shadow}` }}>
+                                        {/* Month Navigation */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeft size={16} /></motion.button>
+                                            <div style={{ fontSize: 16, fontWeight: '900' }}>{calendarDate.toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })}</div>
+                                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowRight size={16} /></motion.button>
+                                        </div>
+                                        {/* Weekday Headers */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 }}>
+                                            {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
+                                                <div key={d} style={{ textAlign: 'center', fontSize: 9, fontWeight: '1000', opacity: 0.3, padding: 5 }}>{d}</div>
+                                            ))}
+                                        </div>
+                                        {/* Day Grid */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                                            {(() => {
+                                                const year = calendarDate.getFullYear();
+                                                const month = calendarDate.getMonth();
+                                                const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+                                                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                                const cells = [];
+                                                for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`}></div>);
+                                                for (let d = 1; d <= daysInMonth; d++) {
+                                                    const dayDate = new Date(year, month, d);
+                                                    const isToday = new Date().toDateString() === dayDate.toDateString();
+                                                    const isSelected = selectedDay === d;
+                                                    const dayLogs = logs.filter(l => { const ld = new Date(l.date || l.created_at); return ld.getFullYear() === year && ld.getMonth() === month && ld.getDate() === d; });
+                                                    const hasSales = dayLogs.some(l => l.type === 'SAVDO');
+                                                    const hasExpense = dayLogs.some(l => l.type === 'EXPENSE');
+                                                    cells.push(
+                                                        <motion.div key={d} whileTap={{ scale: 0.9 }} onClick={() => setSelectedDay(isSelected ? null : d)} style={{
+                                                            height: 42, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                                            background: isSelected ? T.accent : isToday ? `${T.accent}15` : 'transparent',
+                                                            color: isSelected ? '#000' : T.text,
+                                                            border: isToday && !isSelected ? `1.5px solid ${T.accent}` : `1px solid transparent`,
+                                                            fontWeight: '900', fontSize: 13, position: 'relative'
+                                                        }}>
+                                                            {d}
+                                                            {(hasSales || hasExpense) && <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                                                                {hasSales && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? '#000' : '#10B981' }}></div>}
+                                                                {hasExpense && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? '#000' : '#FF6464' }}></div>}
+                                                            </div>}
+                                                        </motion.div>
+                                                    );
+                                                }
+                                                return cells;
+                                            })()}
+                                        </div>
+
+                                        {/* Selected Day Summary */}
+                                        {selectedDay && (() => {
+                                            const year = calendarDate.getFullYear();
+                                            const month = calendarDate.getMonth();
+                                            const dayLogs = logs.filter(l => { const ld = new Date(l.date || l.created_at); return ld.getFullYear() === year && ld.getMonth() === month && ld.getDate() === selectedDay; });
+                                            const daySales = dayLogs.filter(l => l.type === 'SAVDO');
+                                            const dayExpenses = dayLogs.filter(l => l.type === 'EXPENSE');
+                                            const dayKirim = dayLogs.filter(l => l.type === 'KIRIM');
+                                            const totalSales = daySales.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+                                            const totalExpense = dayExpenses.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+                                            return (
+                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 20, borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
+                                                    <div style={{ fontSize: 14, fontWeight: '900', marginBottom: 15 }}>{selectedDay}-{calendarDate.toLocaleDateString('uz-UZ', { month: 'long' })} natijalari</div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 15 }}>
+                                                        <div style={{ background: '#10B98110', padding: 15, borderRadius: 20, textAlign: 'center' }}>
+                                                            <div style={{ fontSize: 8, fontWeight: '1000', color: '#10B981', marginBottom: 4 }}>SAVDO</div>
+                                                            <div style={{ fontSize: 16, fontWeight: '1000', color: '#10B981' }}>{totalSales.toLocaleString()}</div>
+                                                            <div style={{ fontSize: 9, opacity: 0.5, marginTop: 2 }}>{daySales.length} ta</div>
+                                                        </div>
+                                                        <div style={{ background: 'rgba(255,100,100,0.08)', padding: 15, borderRadius: 20, textAlign: 'center' }}>
+                                                            <div style={{ fontSize: 8, fontWeight: '1000', color: '#FF6464', marginBottom: 4 }}>HARAJAT</div>
+                                                            <div style={{ fontSize: 16, fontWeight: '1000', color: '#FF6464' }}>{totalExpense.toLocaleString()}</div>
+                                                            <div style={{ fontSize: 9, opacity: 0.5, marginTop: 2 }}>{dayExpenses.length} ta</div>
+                                                        </div>
+                                                        <div style={{ background: `${T.accent}10`, padding: 15, borderRadius: 20, textAlign: 'center' }}>
+                                                            <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, marginBottom: 4 }}>KIRIM</div>
+                                                            <div style={{ fontSize: 16, fontWeight: '1000', color: T.accent }}>{dayKirim.length}</div>
+                                                            <div style={{ fontSize: 9, opacity: 0.5, marginTop: 2 }}>mahsulot</div>
+                                                        </div>
+                                                    </div>
+                                                    {dayLogs.length > 0 ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 200, overflowY: 'auto' }}>
+                                                            {dayLogs.map(l => (
+                                                                <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', borderRadius: 16, background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${T.border}` }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                                        <div style={{ width: 8, height: 8, borderRadius: 4, background: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}></div>
+                                                                        <div>
+                                                                            <div style={{ fontSize: 13, fontWeight: '800' }}>{l.name}</div>
+                                                                            <div style={{ fontSize: 9, opacity: 0.4 }}>{l.type} • {new Date(l.date || l.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div style={{ fontWeight: '1000', fontSize: 14, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>{l.type === 'EXPENSE' ? '-' : '+'}{(Number(l.amount) || 0).toLocaleString()}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ textAlign: 'center', padding: 20, opacity: 0.3, fontSize: 12 }}>Bu kunda hech qanday harakat yo'q</div>
+                                                    )}
+                                                </motion.div>
+                                            );
+                                        })()}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* PREMIUM INVENTORY DASHBOARD */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 20 }}>
