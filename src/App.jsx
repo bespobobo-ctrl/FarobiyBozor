@@ -355,6 +355,20 @@ export default function App() {
         }
     };
 
+    const handleDeleteGroup = async (group) => {
+        if (!confirm(`"${group.name} (${group.color})" - barcha razmerlarini o'chirmoqchimisiz? (${group.items.length} dona)`)) return;
+        try {
+            const ids = group.items.map(i => i.id);
+            const { error } = await supabase.from('fb_products').delete().in('id', ids);
+            if (error) throw error;
+            setProducts(products.filter(p => !ids.includes(p.id)));
+            setExpanded(null);
+            showToast(`${group.name} butunlay o'chirildi! 🗑️`);
+        } catch (err) {
+            showToast("Xatolik: " + err.message);
+        }
+    };
+
     const handleUpdateProduct = async () => {
         if (!editingItem) return;
         try {
@@ -362,13 +376,15 @@ export default function App() {
                 name: editingItem.name,
                 color: editingItem.color,
                 size: editingItem.size,
+                qty: Number(editingItem.qty),
                 price: Number(editingItem.price),
+                buy_price: Number(editingItem.buy_price || 0),
                 category: editingItem.category
             }).eq('id', editingItem.id);
 
             if (error) throw error;
 
-            setProducts(products.map(p => p.id === editingItem.id ? editingItem : p));
+            setProducts(products.map(p => p.id === editingItem.id ? { ...editingItem, qty: Number(editingItem.qty), price: Number(editingItem.price), buy_price: Number(editingItem.buy_price || 0) } : p));
             setEditingItem(null);
             showToast("O'zgarishlar saqlandi! ✅");
         } catch (err) {
@@ -610,12 +626,17 @@ export default function App() {
                                             style={{ padding: 20, borderBottom: expanded === gIdx ? `1px solid ${T.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}
                                         >
                                             <div>
-                                                <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 5 }}>{p.category.toUpperCase()}</div>
+                                                <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 5 }}>{(p.category || '').toUpperCase()}</div>
                                                 <div style={{ fontSize: 20, fontWeight: '900' }}>{p.name} <small style={{ opacity: 0.4 }}>{p.color}</small></div>
+                                                <div style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>Razmerlar: {p.sizes.join(', ')}</div>
                                             </div>
-                                            <div style={{ textAlign: 'right' }}>
+                                            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                                                 <div style={{ fontSize: 22, fontWeight: '1000', color: T.accent }}>{p.items.length} <small style={{ fontSize: 10 }}>DONA</small></div>
-                                                <div style={{ fontSize: 9, opacity: 0.4, fontWeight: '900', marginTop: 4 }}>{expanded === gIdx ? 'YOPISH ▲' : 'Barchasini ko\'rish ▼'}</div>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setEditingItem(p.items[0]); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={13} /></motion.button>
+                                                    <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleDeleteGroup(p); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></motion.button>
+                                                </div>
+                                                <div style={{ fontSize: 9, opacity: 0.4, fontWeight: '900' }}>{expanded === gIdx ? 'YOPISH ▲' : 'Ko\'rish ▼'}</div>
                                             </div>
                                         </div>
 
@@ -1151,19 +1172,39 @@ export default function App() {
                                     <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>MAHSULOT NOMI</div>
                                     <input value={editingItem.name} onChange={e => setEditingItem({ ...editingItem, name: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
                                 </div>
-                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>RANGI</div>
-                                    <input value={editingItem.color} onChange={e => setEditingItem({ ...editingItem, color: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                        <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>RANGI</div>
+                                        <input value={editingItem.color} onChange={e => setEditingItem({ ...editingItem, color: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                    </div>
+                                    <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                        <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>RAZMER</div>
+                                        <input value={editingItem.size} onChange={e => setEditingItem({ ...editingItem, size: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                    </div>
                                 </div>
-                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>O'LCHAMI (RAZMER)</div>
-                                    <input value={editingItem.size} onChange={e => setEditingItem({ ...editingItem, size: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                        <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>MIQDOR (DONA)</div>
+                                        <input type="number" value={editingItem.qty} onChange={e => setEditingItem({ ...editingItem, qty: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                    </div>
+                                    <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                        <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>KATEGORIYA</div>
+                                        <select value={editingItem.category} onChange={e => setEditingItem({ ...editingItem, category: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 14, fontWeight: '800', outline: 'none', appearance: 'none' }}>
+                                            {categories.map(c => <option key={c} value={c} style={{ background: '#000' }}>{c}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
-                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>NARXI</div>
-                                    <input type="number" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                        <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>SOTUV NARXI</div>
+                                        <input type="number" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.accent, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                    </div>
+                                    <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                        <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>TAN NARXI</div>
+                                        <input type="number" value={editingItem.buy_price || ''} onChange={e => setEditingItem({ ...editingItem, buy_price: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: '#10B981', fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                    </div>
                                 </div>
-                                <button onClick={handleUpdateProduct} style={{ height: 60, borderRadius: 20, border: 'none', background: T.accent, color: '#000', fontWeight: '1000', fontSize: 16, marginTop: 10 }}>SAQLASH</button>
+                                <button onClick={handleUpdateProduct} style={{ height: 60, borderRadius: 20, border: 'none', background: `linear-gradient(135deg, ${T.accent}, #B8860B)`, color: '#000', fontWeight: '1000', fontSize: 16, marginTop: 10, boxShadow: `0 10px 20px ${T.accent}30` }}>SAQLASH ✅</button>
                             </div>
                         </motion.div>
                     </motion.div>
