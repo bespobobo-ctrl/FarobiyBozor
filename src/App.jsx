@@ -626,7 +626,7 @@ export default function App() {
                                             const fd = new FormData();
                                             fd.append('chat_id', '2134273896');
                                             fd.append('photo', file);
-                                            fd.append('caption', `📦 YANGI TO'LOV!\n\nTarif: ${selectedPlan?.name}\nSumma: ${selectedPlan?.price.toLocaleString()} UZS\n\nIltimos tasdiqlang va akkaunt bersangiz bo'ladi.`);
+                                            fd.append('caption', `To'lov tushdimi mana sikirin shoti\n\nTarif: ${selectedPlan?.name}\nSumma: ${selectedPlan?.price.toLocaleString()} UZS`);
                                             await fetch(`https://api.telegram.org/bot8742721286:AAH4dj2xfNUf2J8lY3W9ccxRw3LIUeFLyxw/sendPhoto`, {
                                                 method: 'POST',
                                                 body: fd
