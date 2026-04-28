@@ -6,7 +6,7 @@ import {
     Plus, Minus, X, Check, MapPin, ShoppingBag, Star, Flame, Clock,
     Heart, ArrowRight, DollarSign, AlertTriangle, ChevronRight, BarChart3,
     PieChart, Inbox, LogIn, ArrowUpRight, ArrowDownRight, Phone, Edit, Save,
-    Settings, Trash2, Layers, User, Calendar, Activity, Zap, CreditCard,
+    Settings, Trash2, Layers, User, Calendar, Activity, Zap, CreditCard, Lock,
     Target, Globe, ShieldCheck, ChevronDown, LayoutGrid, Command, Bell, Cpu, MoreVertical,
     ArrowLeft, Palette, Sun, Moon, RefreshCw, Hash, Scissors, Printer, QrCode, Tag
 } from 'lucide-react';
@@ -429,59 +429,146 @@ export default function App() {
     };
 
     if (!isAuthenticated) return (
-        <div style={{ minHeight: '100vh', background: '#050508', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 25, fontFamily: "'Outfit', sans-serif" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400 }}>
-                <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: "'Outfit', sans-serif", position: 'relative', overflow: 'hidden' }}>
+
+            {/* ELITE BACKGROUND VISUALIZATION */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                <motion.div
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 90, 0],
+                        x: [0, 50, 0],
+                        y: [0, -50, 0]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    style={{ position: 'absolute', top: '-20%', left: '-10%', width: '70%', height: '70%', background: `radial-gradient(circle, ${T.accent}15 0%, transparent 70%)`, filter: 'blur(80px)' }}
+                />
+                <motion.div
+                    animate={{
+                        scale: [1.2, 1, 1.2],
+                        rotate: [0, -120, 0],
+                        x: [0, -60, 0],
+                        y: [0, 40, 0]
+                    }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                    style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #4F46E510 0%, transparent 70%)', filter: 'blur(80px)' }}
+                />
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{ width: '100%', maxWidth: 420, zIndex: 10, position: 'relative' }}
+            >
+                {/* LOGO AREA */}
+                <div style={{ textAlign: 'center', marginBottom: 45 }}>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <motion.div
+                            animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                            style={{ position: 'absolute', inset: -15, border: `1px dashed ${T.accent}30`, borderRadius: '45%' }}
+                        />
+                        <motion.div
+                            whileHover={{ scale: 1.05, rotate: 5 }}
+                            style={{ width: 90, height: 90, borderRadius: 32, background: `linear-gradient(135deg, ${T.accent}, #FFD700)`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 25px 60px ${T.accent}40`, position: 'relative' }}
+                        >
+                            <ShieldCheck size={45} color="#000" />
+                        </motion.div>
+                    </div>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                        style={{ fontSize: 36, fontWeight: '900', margin: '25px 0 0', letterSpacing: -1.5, background: 'linear-gradient(to bottom, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                    >
+                        Farobiy Market
+                    </motion.h1>
                     <motion.div
-                        initial={{ scale: 0 }} animate={{ scale: 1 }}
-                        style={{ width: 80, height: 80, borderRadius: 30, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: `0 20px 50px ${T.accent}40` }}
+                        initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 0.4 }}
+                        style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 5, marginTop: 8, color: T.accent }}
                     >
-                        <ShieldCheck size={40} color="#000" />
+                        ENTERPRISE MANAGEMENT
                     </motion.div>
-                    <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0, letterSpacing: -1 }}>Xush Kelibsiz</h2>
-                    <p style={{ opacity: 0.5, fontSize: 13, marginTop: 10, fontWeight: '800', letterSpacing: 2 }}>FAROBIY MARKET SYSTEM</p>
                 </div>
 
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: 35, borderRadius: 45, border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(30px)', boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
-                    <div style={{ marginBottom: 20 }}>
-                        <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 10 }}>LOGIN</div>
-                        <input
-                            value={loginData.user}
-                            onChange={e => setLoginData({ ...loginData, user: e.target.value })}
-                            placeholder="Kiriting..."
-                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 25px', borderRadius: 22, color: '#fff', fontSize: 16, fontWeight: '800', outline: 'none' }}
-                        />
-                    </div>
-                    <div style={{ marginBottom: 35 }}>
-                        <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 10 }}>PAROL</div>
-                        <input
-                            type="password"
-                            value={loginData.pass}
-                            onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
-                            placeholder="••••••"
-                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 25px', borderRadius: 22, color: '#fff', fontSize: 16, fontWeight: '800', outline: 'none' }}
-                        />
+                {/* LOGIN CARD */}
+                <div style={{
+                    background: 'rgba(15, 15, 20, 0.6)',
+                    backdropFilter: 'blur(40px)',
+                    padding: '45px 35px',
+                    borderRadius: 48,
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: '0 50px 100px rgba(0,0,0,0.8), inset 0 0 80px rgba(255,255,255,0.02)'
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 25 }}>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 12, opacity: 0.8 }}>LOGIN ID</div>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    value={loginData.user}
+                                    onChange={e => setLoginData({ ...loginData, user: e.target.value })}
+                                    placeholder="Username"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '22px 28px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.3s' }}
+                                />
+                                <User size={18} style={{ position: 'absolute', right: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.2 }} />
+                            </div>
+                        </div>
+
+                        <div style={{ position: 'relative' }}>
+                            <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 12, opacity: 0.8 }}>SECURITY KEY</div>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="password"
+                                    value={loginData.pass}
+                                    onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
+                                    placeholder="••••••••"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '22px 28px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.3s' }}
+                                />
+                                <Lock size={18} style={{ position: 'absolute', right: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.2 }} />
+                            </div>
+                        </div>
+
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                                if (loginData.user === '111' && loginData.pass === '111') {
+                                    setIsAuthenticated(true);
+                                    localStorage.setItem('fb_auth', 'true');
+                                    showToast("Xush kelibsiz! Panelingiz tayyor. 🚀");
+                                } else {
+                                    showToast("Kalit yoki Login noto'g'ri! 🔐");
+                                }
+                            }}
+                            style={{
+                                width: '100%',
+                                height: 75,
+                                background: `linear-gradient(135deg, ${T.accent}, #FFD700)`,
+                                border: 'none',
+                                borderRadius: 24,
+                                color: '#000',
+                                fontSize: 16,
+                                fontWeight: '1000',
+                                letterSpacing: 1,
+                                boxShadow: `0 20px 40px ${T.accent}30`,
+                                cursor: 'pointer',
+                                marginTop: 15
+                            }}
+                        >
+                            TIZIMNI FAOLLASHTIRISH
+                        </motion.button>
                     </div>
 
-                    <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                            if (loginData.user === '111' && loginData.pass === '111') {
-                                setIsAuthenticated(true);
-                                localStorage.setItem('fb_auth', 'true');
-                                showToast("Muvaffaqiyatli kirish! 🔓");
-                            } else {
-                                showToast("Identifikatsiya hato! ❌");
-                            }
-                        }}
-                        style={{ width: '100%', height: 75, background: T.accent, border: 'none', borderRadius: 25, color: '#000', fontSize: 16, fontWeight: '1000', boxShadow: `0 15px 30px ${T.accent}30` }}
-                    >
-                        TIZIMGA KIRISH
-                    </motion.button>
+                    <div style={{ marginTop: 35, textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: 0.2 }}>
+                            <div style={{ height: 1, flex: 1, background: '#fff' }} />
+                            <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 3 }}>ENCRYPTED SESSION</div>
+                            <div style={{ height: 1, flex: 1, background: '#fff' }} />
+                        </div>
+                    </div>
                 </div>
 
-                <div style={{ textAlign: 'center', marginTop: 40, opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                    VERSION v4.38 BOUTIQUE PRO
+                {/* VERSION FOOTER */}
+                <div style={{ textAlign: 'center', marginTop: 45, opacity: 0.2 }}>
+                    <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.39</div>
+                    <div style={{ fontSize: 7, fontWeight: '900', marginTop: 5, letterSpacing: 1 }}>© 2026 ELITE SYSTEM ARCHITECTURE</div>
                 </div>
             </motion.div>
         </div>
@@ -498,7 +585,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.38 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.39 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
@@ -667,7 +754,7 @@ export default function App() {
                         </div>
 
                         <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.38
+                            FAROBIY MARKET • v4.39
                         </div>
                     </motion.div>
                 )}
