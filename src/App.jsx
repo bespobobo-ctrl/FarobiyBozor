@@ -466,7 +466,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.57 PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.58 PRO</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -641,22 +641,26 @@ export default function App() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 25 }}>
                                         <input
                                             id="shopName" placeholder="Dukon nomi"
-                                            style={{ background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }}
+                                            style={{ background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }}
                                         />
                                         <div style={{ display: 'flex', gap: 10 }}>
-                                            <input id="shopLogin" placeholder="Login" style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }} />
-                                            <input id="shopPass" placeholder="Parol" style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }} />
+                                            <input id="shopLogin" placeholder="Login" style={{ flex: 1, minWidth: 0, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                            <input id="shopPass" placeholder="Parol" style={{ flex: 1, minWidth: 0, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
                                         </div>
                                         <motion.button
                                             whileTap={{ scale: 0.98 }}
                                             onClick={async () => {
-                                                const name = document.getElementById('shopName').value;
-                                                const login = document.getElementById('shopLogin').value;
-                                                const pass = document.getElementById('shopPass').value;
+                                                const nameEl = document.getElementById('shopName');
+                                                const loginEl = document.getElementById('shopLogin');
+                                                const passEl = document.getElementById('shopPass');
+                                                const name = nameEl.value;
+                                                const login = loginEl.value;
+                                                const pass = passEl.value;
                                                 if (!name || !login || !pass) return showToast("Barcha maydonlarni to'ldiring!");
                                                 const { error } = await supabase.from('fb_shops').insert([{ name, login, password: pass }]);
                                                 if (error) return showToast("Xatolik: " + error.message);
                                                 showToast("Dukon muvaffaqiyatli qo'shildi! ✨");
+                                                nameEl.value = ''; loginEl.value = ''; passEl.value = '';
                                                 const { data } = await supabase.from('fb_shops').select('*');
                                                 if (data) setShops(data);
                                             }}
