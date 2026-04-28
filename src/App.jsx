@@ -1868,8 +1868,8 @@ export default function App() {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 15, width: '100%', maxWidth: 450, paddingBottom: 40, position: 'relative' }}>
                             {[
-                                { name: 'Odiy', price: 25000, period: '1 Oy', features: ['Ombor boshqaruvi', 'Sotuv terminali', 'Telegram Bot ulanishi'], accent: '#BBBBBB' },
-                                { name: 'Premium', price: 70000, period: '3 Oy', features: ['Barcha "Oddiy" imkoniyatlari', 'Kengaytirilgan statistika', 'Prioritet yordam'], accent: T.accent, recommended: true },
+                                { name: 'Odiy', price: 250000, period: '1 Oy', features: ['Ombor boshqaruvi', 'Sotuv terminali', 'Telegram Bot ulanishi'], accent: '#BBBBBB' },
+                                { name: 'Premium', price: 700000, period: '3 Oy', features: ['Barcha "Oddiy" imkoniyatlari', 'Kengaytirilgan statistika', 'Prioritet yordam'], accent: T.accent, recommended: true },
                                 { name: 'Super Premium', price: 1200000, period: '1 Yil', features: ['Barcha "Premium" imkoniyatlari', 'Cheksiz mahsulotlar', 'Shaxsiy menejer xizmati'], accent: '#00D4FF' }
                             ].map((p, i) => (
                                 <motion.div
