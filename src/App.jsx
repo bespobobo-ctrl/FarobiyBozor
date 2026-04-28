@@ -47,6 +47,8 @@ export default function App() {
     const [showRecent, setShowRecent] = useState(true);
     const [selectedDay, setSelectedDay] = useState(null);
     const [showCalendar, setShowCalendar] = useState(false);
+    const [historyType, setHistoryType] = useState('ALL');
+    const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Kirim Form (Pachka System)
     const [sizeMode, setSizeMode] = useState('num');
@@ -348,10 +350,20 @@ export default function App() {
     };
 
     const handleDeleteProduct = async (id) => {
+        const item = products.find(p => p.id === id);
         if (!confirm("Haqiqatdan ham o'chirmoqchimisiz?")) return;
         try {
             const { error } = await supabase.from('fb_products').delete().eq('id', id);
             if (error) throw error;
+
+            // Log deletion
+            await supabase.from('fb_logs').insert([{
+                name: `${item?.name} (${item?.size})`,
+                type: 'DELETE',
+                amount: 0,
+                date: new Date()
+            }]);
+
             setProducts(products.filter(p => p.id !== id));
             showToast("O'chirildi! 🗑️");
         } catch (err) {
@@ -365,6 +377,15 @@ export default function App() {
             const ids = group.items.map(i => i.id);
             const { error } = await supabase.from('fb_products').delete().in('id', ids);
             if (error) throw error;
+
+            // Log deletion
+            await supabase.from('fb_logs').insert([{
+                name: `${group.name} (Barcha razmerlar)`,
+                type: 'DELETE',
+                amount: 0,
+                date: new Date()
+            }]);
+
             setProducts(products.filter(p => !ids.includes(p.id)));
             setExpanded(null);
             showToast(`${group.name} butunlay o'chirildi! 🗑️`);
@@ -388,6 +409,14 @@ export default function App() {
 
             if (error) throw error;
 
+            // Log update
+            await supabase.from('fb_logs').insert([{
+                name: editingItem.name,
+                type: 'EDIT',
+                amount: 0,
+                date: new Date()
+            }]);
+
             setProducts(products.map(p => p.id === editingItem.id ? { ...editingItem, qty: Number(editingItem.qty), price: Number(editingItem.price), buy_price: Number(editingItem.buy_price || 0) } : p));
             setEditingItem(null);
             showToast("O'zgarishlar saqlandi! ✅");
@@ -407,7 +436,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.35 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.36 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
@@ -565,7 +594,7 @@ export default function App() {
                         </div>
 
                         <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.35
+                            FAROBIY MARKET • v4.36
                         </div>
                     </motion.div>
                 )}
@@ -983,39 +1012,114 @@ export default function App() {
                     </motion.div>
                 )}
 
-                {tab === 'history' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
-                            <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Tarix</h2>
-                            <div style={{ width: 45, height: 45, borderRadius: 15, background: `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.accent }}>
-                                <History size={24} />
-                            </div>
-                        </div>
+                {tab === 'history' && (() => {
+                    const filteredLogs = logs.filter(l => {
+                        const matchesType = historyType === 'ALL' || l.type === historyType;
+                        const logDate = new Date(l.date || l.created_at).toISOString().split('T')[0];
+                        const matchesDate = !historyDate || logDate === historyDate;
+                        return matchesType && matchesDate;
+                    });
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            {logs.length === 0 && <div style={{ textAlign: 'center', padding: 50, opacity: 0.4 }}>Tarix bo'sh 🍃</div>}
-                            {logs.slice(0, 100).map(l => (
-                                <div key={l.id} style={{ background: T.card, padding: 20, borderRadius: 28, border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
-                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: l.type === 'SAVDO' ? '#10B98115' : l.type === 'EXPENSE' ? '#FF646415' : `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            {l.type === 'SAVDO' ? <TrendingUp size={18} color="#10B981" /> : l.type === 'EXPENSE' ? <ArrowDownLeft size={18} color="#FF6464" /> : <Package size={18} color={T.accent} />}
-                                        </div>
-                                        <div>
-                                            <div style={{ fontWeight: '800', fontSize: 15 }}>{l.name}</div>
-                                            <div style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>{new Date(l.date || l.created_at).toLocaleString('uz-UZ')}</div>
-                                        </div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontWeight: '1000', fontSize: 16, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>
-                                            {l.type === 'EXPENSE' ? '-' : '+'}{Number(l.amount || 0).toLocaleString()}
-                                        </div>
-                                        <div style={{ fontSize: 9, opacity: 0.3, fontWeight: '900', marginTop: 2 }}>{l.type}</div>
-                                    </div>
+                    // History Stats
+                    const hStats = {
+                        day: logs.filter(l => new Date(l.date || l.created_at).toDateString() === new Date().toDateString() && l.type === 'SAVDO').reduce((s, x) => s + (Number(x.amount) || 0), 0),
+                        week: logs.filter(l => {
+                            const d = new Date(l.date || l.created_at);
+                            const now = new Date();
+                            const weekAgo = new Date(now.setDate(now.getDate() - 7));
+                            return d >= weekAgo && l.type === 'SAVDO';
+                        }).reduce((s, x) => s + (Number(x.amount) || 0), 0),
+                        month: logs.filter(l => new Date(l.date || l.created_at).getMonth() === new Date().getMonth() && l.type === 'SAVDO').reduce((s, x) => s + (Number(x.amount) || 0), 0),
+                    };
+
+                    return (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            {/* PREMIUM HISTORY HEADER */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+                                <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Tarix <small style={{ fontSize: 12, opacity: 0.3, letterSpacing: 2 }}>ANALITIKA</small></h2>
+                                <input
+                                    type="date"
+                                    value={historyDate}
+                                    onChange={(e) => setHistoryDate(e.target.value)}
+                                    style={{ background: T.card, color: T.text, border: `1px solid ${T.border}`, padding: '8px 12px', borderRadius: 12, fontSize: 12, fontWeight: '800', outline: 'none' }}
+                                />
+                            </div>
+
+                            {/* MINI STATS CARDS */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 25 }}>
+                                <div style={{ background: T.card, padding: '15px 10px', borderRadius: 24, border: `1px solid ${T.border}`, textAlign: 'center' }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>BUGUN</div>
+                                    <div style={{ fontSize: 14, fontWeight: '1000', color: '#10B981' }}>{hStats.day.toLocaleString()}</div>
                                 </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
+                                <div style={{ background: T.card, padding: '15px 10px', borderRadius: 24, border: `1px solid ${T.border}`, textAlign: 'center' }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>HAFTALIK</div>
+                                    <div style={{ fontSize: 14, fontWeight: '1000', color: T.accent }}>{hStats.week.toLocaleString()}</div>
+                                </div>
+                                <div style={{ background: T.card, padding: '15px 10px', borderRadius: 24, border: `1px solid ${T.border}`, textAlign: 'center' }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>OYLIK</div>
+                                    <div style={{ fontSize: 14, fontWeight: '1000', color: T.text }}>{hStats.month.toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            {/* TYPE FILTER CHIPS */}
+                            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 15, marginBottom: 15, scrollbarWidth: 'none' }}>
+                                {[
+                                    { id: 'ALL', label: 'HAMMASI' },
+                                    { id: 'SAVDO', label: 'SOTUV' },
+                                    { id: 'KIRIM', label: 'KIRIM' },
+                                    { id: 'EXPENSE', label: 'HARAJAT' },
+                                    { id: 'EDIT', label: 'O\'ZGARISH' },
+                                    { id: 'DELETE', label: 'O\'CHIRISH' }
+                                ].map(f => (
+                                    <motion.div
+                                        key={f.id}
+                                        onClick={() => setHistoryType(f.id)}
+                                        whileTap={{ scale: 0.95 }}
+                                        style={{
+                                            padding: '10px 20px', borderRadius: 15, fontSize: 11, fontWeight: '900', whiteSpace: 'nowrap', cursor: 'pointer',
+                                            background: historyType === f.id ? T.accent : T.card,
+                                            color: historyType === f.id ? '#000' : T.text,
+                                            border: `1px solid ${historyType === f.id ? T.accent : T.border}`
+                                        }}
+                                    >
+                                        {f.label}
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* LOG LIST */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                {filteredLogs.length === 0 && <div style={{ textAlign: 'center', padding: 50, opacity: 0.3, background: T.card, borderRadius: 30, border: `1px dashed ${T.border}` }}>Ma'lumot topilmadi 🍃</div>}
+                                {filteredLogs.slice(0, 50).map(l => (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                        key={l.id}
+                                        style={{ background: T.card, padding: '18px 22px', borderRadius: 28, border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: `0 10px 20px ${T.shadow}` }}
+                                    >
+                                        <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
+                                            <div style={{ width: 42, height: 42, borderRadius: 14, background: l.type === 'SAVDO' ? '#10B98115' : l.type === 'EXPENSE' ? '#FF646415' : l.type === 'DELETE' ? '#FF444415' : `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {l.type === 'SAVDO' ? <TrendingUp size={18} color="#10B981" /> : l.type === 'EXPENSE' ? <ArrowDownLeft size={18} color="#FF6464" /> : l.type === 'DELETE' ? <Trash2 size={18} color="#FF4444" /> : l.type === 'EDIT' ? <Edit size={18} color={T.accent} /> : <Package size={18} color={T.accent} />}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: '800', fontSize: 15 }}>{l.name}</div>
+                                                <div style={{ fontSize: 10, opacity: 0.3, fontWeight: '800', marginTop: 4 }}>{new Date(l.date || l.created_at).toLocaleTimeString('uz-UZ')} • {l.type}</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            {l.amount > 0 && (
+                                                <div style={{ fontWeight: '1000', fontSize: 16, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>
+                                                    {l.type === 'EXPENSE' ? '-' : '+'}{Number(l.amount).toLocaleString()}
+                                                </div>
+                                            )}
+                                            <div style={{ fontSize: 9, opacity: 0.2, fontWeight: '1000' }}>{new Date(l.date || l.created_at).toLocaleDateString('uz-UZ')}</div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                            <div style={{ height: 20 }} />
+                        </motion.div>
+                    )
+                })()}
                 <div style={{ height: 100 }} />
             </div>
 
