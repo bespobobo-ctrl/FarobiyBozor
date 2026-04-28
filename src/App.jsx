@@ -5,7 +5,7 @@ import {
     TrendingUp, Package, ShoppingCart, Users, History, Home, Search,
     Plus, Minus, X, Check, MapPin, ShoppingBag, Star, Flame, Clock,
     Heart, ArrowRight, DollarSign, AlertTriangle, ChevronRight, BarChart3,
-    PieChart, Inbox, LogIn, ArrowUpRight, ArrowDownRight, Phone, Edit, Save,
+    PieChart, Inbox, LogIn, LogOut, ArrowUpRight, ArrowDownRight, Phone, Edit, Save,
     Settings, Trash2, Layers, User, Calendar, Activity, Zap, CreditCard, Lock,
     Target, Globe, ShieldCheck, ChevronDown, LayoutGrid, Command, Bell, Cpu, MoreVertical,
     ArrowLeft, Palette, Sun, Moon, RefreshCw, Hash, Scissors, Printer, QrCode, Tag
@@ -567,7 +567,7 @@ export default function App() {
 
                 {/* VERSION FOOTER */}
                 <div style={{ textAlign: 'center', marginTop: 45, opacity: 0.2 }}>
-                    <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.39</div>
+                    <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.40</div>
                     <div style={{ fontSize: 7, fontWeight: '900', marginTop: 5, letterSpacing: 1 }}>© 2026 ELITE SYSTEM ARCHITECTURE</div>
                 </div>
             </motion.div>
@@ -585,12 +585,26 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.39 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.40 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
-                <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
-                    {isDark ? <Sun size={20} color={T.accent} /> : <Moon size={20} color="#141E26" />}
-                </motion.div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
+                        {isDark ? <Sun size={20} color={T.accent} /> : <Moon size={20} color="#141E26" />}
+                    </motion.div>
+                    <motion.div
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                            if (confirm("Tizimdan chiqmoqchimisiz?")) {
+                                localStorage.removeItem('fb_auth');
+                                setIsAuthenticated(false);
+                            }
+                        }}
+                        style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}`, color: '#FF6464' }}
+                    >
+                        <LogOut size={20} />
+                    </motion.div>
+                </div>
             </header>
 
             <div style={{ padding: '0 25px' }}>
@@ -754,7 +768,7 @@ export default function App() {
                         </div>
 
                         <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.39
+                            FAROBIY MARKET • v4.40
                         </div>
                     </motion.div>
                 )}
