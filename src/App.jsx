@@ -58,6 +58,7 @@ export default function App() {
     const [shops, setShops] = useState([]);
     const [isDark, setIsDark] = useState(() => JSON.parse(localStorage.getItem('fb_theme') || 'false'));
     const [categories, setCategories] = useState(['Premium', 'Sifatli', 'Oyoq kiyim']);
+    const [editingShop, setEditingShop] = useState(null);
     const [selectedCat, setSelectedCat] = useState('Hammasi');
     const [newCat, setNewCat] = useState('');
     const [cart, setCart] = useState(null);
@@ -522,8 +523,8 @@ export default function App() {
                                 onClick={async () => {
                                     if (showSuperLogin) {
                                         if (loginData.user === '123' && loginData.pass === '123') {
-                                            setIsAuthenticated(true); setIsSuperAdmin(true);
-                                            localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'true');
+                                            setIsAuthenticated(true); setIsSuperAdmin(true); setCurrentShop(null);
+                                            localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'true'); localStorage.removeItem('fb_shop');
                                             showToast("Super Admin sessiyasi boshlandi 💎");
                                         } else { showToast("Admin paroli xato!"); }
                                     } else {
@@ -534,6 +535,7 @@ export default function App() {
                                         } else {
                                             const { data: s } = await supabase.from('fb_shops').select('*').eq('login', loginData.user).eq('password', loginData.pass).single();
                                             if (s) {
+                                                if (s.is_blocked) return showToast("Dukoningiz bloklangan! 🛑 Admin bilan bog'laning.");
                                                 setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop(s);
                                                 localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify(s));
                                                 showToast(`${s.name} dukoniga xush kelibsiz! ✨`);
@@ -578,7 +580,11 @@ export default function App() {
                         onClick={() => {
                             if (confirm("Tizimdan chiqmoqchimisiz?")) {
                                 localStorage.removeItem('fb_auth');
+                                localStorage.removeItem('fb_shop');
+                                localStorage.removeItem('fb_is_super');
                                 setIsAuthenticated(false);
+                                setCurrentShop(null);
+                                setIsSuperAdmin(false);
                             }
                         }}
                         style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}`, color: '#FF6464' }}
@@ -654,7 +660,7 @@ export default function App() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                             {/* SECTION: PROFILE */}
                             {!isSuperAdmin && currentShop?.id !== 0 && (
-                                <SectionCard icon={<User size={18} />} title="Dukon Profili" accent={T.accent}>
+                                <SectionCard key={currentShop?.id} icon={<User size={18} />} title="Dukon Profili" accent={T.accent}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 15 }}>
                                         <ProfileInput id="profName" label="Dukon Nomi" val={currentShop?.name} placeholder="Nomi" T={T} />
                                         <ProfileInput id="profPhone" label="Telefon" val={currentShop?.phone} placeholder="+998..." T={T} />
@@ -714,18 +720,40 @@ export default function App() {
                                             Qo'shish
                                         </motion.button>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 200, overflowY: 'auto', paddingRight: 5 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 280, overflowY: 'auto', paddingRight: 5 }}>
                                         {shops.map(s => (
-                                            <div key={s.id} style={{ padding: '15px', borderRadius: 18, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div key={s.id} style={{ padding: '15px', borderRadius: 20, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: s.is_blocked ? '1px solid rgba(255,100,100,0.2)' : `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: s.is_blocked ? 0.7 : 1 }}>
                                                 <div>
-                                                    <div style={{ fontWeight: '900', fontSize: 14 }}>{s.name}</div>
-                                                    <div style={{ fontSize: 9, opacity: 0.5 }}>ID: {s.id} | {s.login}</div>
+                                                    <div style={{ fontWeight: '900', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        {s.name}
+                                                        {s.is_blocked && <ShieldOff size={12} color="#FF6464" />}
+                                                    </div>
+                                                    <div style={{ fontSize: 9, opacity: 0.5 }}>ID: {s.id} | Login: {s.login}</div>
                                                 </div>
-                                                <Trash2 size={16} color="#FF6464" style={{ cursor: 'pointer' }} onClick={async () => {
-                                                    if (!confirm("O'chirasizmi?")) return;
-                                                    await supabase.from('fb_shops').delete().eq('id', s.id);
-                                                    setShops(shops.filter(x => x.id !== s.id));
-                                                }} />
+                                                <div style={{ display: 'flex', gap: 8 }}>
+                                                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditingShop(s)} style={{ width: 35, height: 35, borderRadius: 10, background: `${T.accent}15`, border: 'none', color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit3 size={15} /></motion.button>
+                                                    <motion.button
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={async () => {
+                                                            const { error } = await supabase.from('fb_shops').update({ is_blocked: !s.is_blocked }).eq('id', s.id);
+                                                            if (error) return;
+                                                            setShops(shops.map(x => x.id === s.id ? { ...x, is_blocked: !s.is_blocked } : x));
+                                                            showToast(s.is_blocked ? "🔓 Faollashdi" : "🛑 Bloklandi");
+                                                        }}
+                                                        style={{ width: 35, height: 35, borderRadius: 10, background: s.is_blocked ? 'rgba(16,185,129,0.1)' : 'rgba(255,100,100,0.1)', border: 'none', color: s.is_blocked ? '#10B981' : '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    >
+                                                        {s.is_blocked ? <CheckCircle size={15} /> : <ShieldOff size={15} />}
+                                                    </motion.button>
+                                                    <motion.button
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={async () => {
+                                                            if (!confirm("O'chirilsinmi?")) return;
+                                                            await supabase.from('fb_shops').delete().eq('id', s.id);
+                                                            setShops(shops.filter(x => x.id !== s.id));
+                                                        }}
+                                                        style={{ width: 35, height: 35, borderRadius: 10, background: 'rgba(255,100,100,0.05)', border: 'none', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    ><Trash2 size={15} /></motion.button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1750,6 +1778,57 @@ export default function App() {
                         <motion.button whileTap={{ scale: 0.9 }} onClick={() => setViewingQR(null)} style={{ marginTop: 40, height: 60, width: 60, borderRadius: 30, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <X size={30} />
                         </motion.button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* EDIT SHOP MODAL (ADMIN ONLY) */}
+            <AnimatePresence>
+                {editingShop && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(15px)', zIndex: 10000, padding: 15, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <motion.div initial={{ scale: 0.95, y: 30 }} animate={{ scale: 1, y: 0 }} style={{ background: T.card, width: '100%', maxWidth: 400, borderRadius: 40, padding: 25, border: `1px solid ${T.accent}40`, position: 'relative' }}>
+                            <div style={{ textAlign: 'center', marginBottom: 25 }}>
+                                <h2 style={{ margin: 0, fontSize: 22, fontWeight: '900' }}>Dukonni Tahrirlash</h2>
+                                <div onClick={() => setEditingShop(null)} style={{ position: 'absolute', top: 20, right: 20, padding: 8, background: isDark ? '#1C1C26' : '#F5F5F5', borderRadius: 12, cursor: 'pointer' }}><X size={18} /></div>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>DUKON NOMI</div>
+                                    <input value={editingShop.name} onChange={e => setEditingShop({ ...editingShop, name: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                </div>
+                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>LOGIN ID</div>
+                                    <input value={editingShop.login} onChange={e => setEditingShop({ ...editingShop, login: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                </div>
+                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>PAROL (OXIRGI: {editingShop.password})</div>
+                                    <input value={editingShop.password} onChange={e => setEditingShop({ ...editingShop, password: e.target.value })} style={{ width: '100%', background: 'transparent', border: 'none', color: T.accent, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                </div>
+                                <div style={{ background: isDark ? '#16161F' : '#F5F5F5', padding: '15px 18px', borderRadius: 20, border: `1px solid ${T.border}` }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.3, marginBottom: 5 }}>TEL RAQAM</div>
+                                    <input value={editingShop.phone || ''} onChange={e => setEditingShop({ ...editingShop, phone: e.target.value })} placeholder="+998" style={{ width: '100%', background: 'transparent', border: 'none', color: T.text, fontSize: 16, fontWeight: '800', outline: 'none' }} />
+                                </div>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                    onClick={async () => {
+                                        const { error } = await supabase.from('fb_shops').update({
+                                            name: editingShop.name,
+                                            login: editingShop.login,
+                                            password: editingShop.password,
+                                            phone: editingShop.phone
+                                        }).eq('id', editingShop.id);
+                                        if (error) return showToast("Xatolik: " + error.message);
+                                        setShops(shops.map(s => s.id === editingShop.id ? editingShop : s));
+                                        setEditingShop(null);
+                                        showToast("O'zgarishlar saqlandi! ✨");
+                                    }}
+                                    style={{ height: 60, borderRadius: 20, border: 'none', background: `linear-gradient(135deg, ${T.accent}, #B8860B)`, color: '#000', fontWeight: '1000', fontSize: 16, marginTop: 10, boxShadow: `0 15px 30px ${T.accent}30` }}
+                                >
+                                    SAQLASH ✅
+                                </motion.button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
