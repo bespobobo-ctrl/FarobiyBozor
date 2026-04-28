@@ -64,6 +64,7 @@ export default function App() {
     const [newCat, setNewCat] = useState('');
     const [cart, setCart] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showPricing, setShowPricing] = useState(false);
 
     const [showKirim, setShowKirim] = useState(false);
     const [showSavdo, setShowSavdo] = useState(false);
@@ -141,6 +142,13 @@ export default function App() {
         };
         fetchData();
     }, [isAuthenticated, isSuperAdmin, currentShop]);
+
+    useEffect(() => {
+        if (isAuthenticated && !isSuperAdmin && !localStorage.getItem('fb_pricing_seen')) {
+            setShowPricing(true);
+            localStorage.setItem('fb_pricing_seen', 'true');
+        }
+    }, [isAuthenticated, isSuperAdmin]);
 
     const groupedProducts = useMemo(() => {
         let filtered = products;
@@ -489,7 +497,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.66 ELITE PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.70 ELITE ULTIMATE</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -553,7 +561,7 @@ export default function App() {
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.66 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.70 • 2026</div>
             </div>
         </div>
     );
@@ -569,7 +577,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY MARKET'}</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.66</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.70</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -648,14 +656,23 @@ export default function App() {
 
                 {tab === 'settings' && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ padding: '0 5px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 35 }}>
-                            <div style={{ width: 60, height: 60, borderRadius: 22, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.accent, border: `1px solid ${T.border}` }}>
-                                <Settings size={28} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 35 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                                <div style={{ width: 60, height: 60, borderRadius: 22, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.accent, border: `1px solid ${T.border}` }}>
+                                    <Settings size={28} />
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: 32, fontWeight: '1000', margin: 0, letterSpacing: -1.5 }}>Sozlamalar</h2>
+                                    <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, opacity: 0.6, letterSpacing: 2 }}>TIZIM KONFIGURATSIYASI</div>
+                                </div>
                             </div>
-                            <div>
-                                <h2 style={{ fontSize: 32, fontWeight: '1000', margin: 0, letterSpacing: -1.5 }}>Sozlamalar</h2>
-                                <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, opacity: 0.6, letterSpacing: 2 }}>TIZIM KONFIGURATSIYASI</div>
-                            </div>
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setShowPricing(true)}
+                                style={{ padding: '12px 20px', borderRadius: 16, background: `${T.accent}15`, color: T.accent, border: `1px solid ${T.accent}30`, fontSize: 12, fontWeight: '1000', display: 'flex', alignItems: 'center', gap: 8 }}
+                            >
+                                <Zap size={14} /> Tariflar
+                            </motion.button>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -1831,6 +1848,76 @@ export default function App() {
                                 </motion.button>
                             </div>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* PRICING PLANS OVERLAY */}
+            <AnimatePresence>
+                {showPricing && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: '#020205', zIndex: 20000, padding: '25px', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: "'Outfit', sans-serif" }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: `radial-gradient(circle at 50% 0%, ${T.accent}15 0%, transparent 70%)` }} />
+
+                        <div style={{ textAlign: 'center', marginTop: 40, marginBottom: 40, position: 'relative' }}>
+                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 25, repeat: Infinity, ease: 'linear' }} style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', opacity: 0.05 }}>
+                                <Sun size={150} color={T.accent} />
+                            </motion.div>
+                            <h2 style={{ fontSize: 36, fontWeight: '1000', margin: 0, color: '#fff', letterSpacing: -1.5 }}>Premium Tariflar</h2>
+                            <p style={{ opacity: 0.5, fontSize: 14, fontWeight: '700', marginTop: 10, maxWidth: 280, margin: '10px auto' }}>Biznesingizni yangi bosqichga olib chiqing va barcha imkoniyatlardan foydalaning</p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 15, width: '100%', maxWidth: 450, paddingBottom: 40, position: 'relative' }}>
+                            {[
+                                { name: 'Odiy', price: 25000, period: '1 Oy', features: ['Ombor boshqaruvi', 'Sotuv terminali', 'Telegram Bot ulanishi'], accent: '#BBBBBB' },
+                                { name: 'Premium', price: 70000, period: '3 Oy', features: ['Barcha "Oddiy" imkoniyatlari', 'Kengaytirilgan statistika', 'Prioritet yordam'], accent: T.accent, recommended: true },
+                                { name: 'Super Premium', price: 1200000, period: '1 Yil', features: ['Barcha "Premium" imkoniyatlari', 'Cheksiz mahsulotlar', 'Shaxsiy menejer xizmati'], accent: '#00D4FF' }
+                            ].map((p, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.15 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        showToast(`${p.name} paketi tanlandi! ✨`);
+                                        setShowPricing(false);
+                                    }}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.03)',
+                                        border: p.recommended ? `2px solid ${p.accent}` : '1px solid rgba(255,255,255,0.08)',
+                                        borderRadius: 35,
+                                        padding: 30,
+                                        position: 'relative',
+                                        backdropFilter: 'blur(20px)',
+                                        overflow: 'hidden',
+                                        boxShadow: p.recommended ? `0 20px 40px ${p.accent}20` : 'none'
+                                    }}
+                                >
+                                    {p.recommended && (
+                                        <div style={{ position: 'absolute', top: 0, right: 0, background: p.accent, color: '#000', padding: '8px 18px', borderRadius: '0 0 0 24px', fontSize: 11, fontWeight: '1000' }}>TAVSIYA ETILADI</div>
+                                    )}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 25 }}>
+                                        <div>
+                                            <div style={{ color: p.accent, fontSize: 10, fontWeight: '1000', letterSpacing: 4, marginBottom: 8, opacity: 0.8 }}>{p.name.toUpperCase()}</div>
+                                            <div style={{ fontSize: 34, fontWeight: '1000' }}>{p.price.toLocaleString()}<small style={{ fontSize: 14, opacity: 0.3, marginLeft: 5 }}> SOM</small></div>
+                                            <div style={{ fontSize: 12, opacity: 0.5, fontWeight: '700', marginTop: 4 }}>{p.period} uchun obuna</div>
+                                        </div>
+                                        <motion.div animate={p.recommended ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 2, repeat: Infinity }} style={{ width: 55, height: 55, borderRadius: 20, background: `${p.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {i === 0 ? <Package size={24} color={p.accent} /> : i === 1 ? <Zap size={24} color={p.accent} /> : <Star size={24} color={p.accent} />}
+                                        </motion.div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 30 }}>
+                                        {p.features.map((f, fi) => (
+                                            <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: '800', opacity: 0.9 }}>
+                                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.accent, boxShadow: `0 0 10px ${p.accent}` }} /> {f}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <motion.button style={{ width: '100%', height: 65, borderRadius: 22, background: p.recommended ? p.accent : 'rgba(255,255,255,0.06)', color: p.recommended ? '#000' : '#fff', border: 'none', fontWeight: '1000', fontSize: 16, boxShadow: p.recommended ? `0 15px 30px ${p.accent}30` : 'none', cursor: 'pointer' }}>
+                                        USHBU PAKETNI TANLASH ✅
+                                    </motion.button>
+                                </motion.div>
+                            ))}
+                        </div>
+                        <motion.div whileTap={{ scale: 0.9 }} onClick={() => setShowPricing(false)} style={{ opacity: 0.3, fontSize: 13, fontWeight: '800', cursor: 'pointer', marginBottom: 40, borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: 2 }}>Keyinroq tanlayman</motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
