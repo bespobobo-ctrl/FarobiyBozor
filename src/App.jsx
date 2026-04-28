@@ -429,148 +429,106 @@ export default function App() {
     };
 
     if (!isAuthenticated) return (
-        <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: "'Outfit', sans-serif", position: 'relative', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', flexDirection: 'column', padding: 25, fontFamily: "'Outfit', sans-serif", position: 'relative', overflow: 'hidden' }}>
 
-            {/* ELITE BACKGROUND VISUALIZATION */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+            {/* 2026 LIQUID MESH BACKGROUND */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.6 }}>
                 <motion.div
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 90, 0],
-                        x: [0, 50, 0],
-                        y: [0, -50, 0]
-                    }}
+                    animate={{ x: [0, 100, 0], y: [0, 50, 0], scale: [1, 1.5, 1] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                    style={{ position: 'absolute', top: '-10%', left: '-20%', width: '100%', height: '100%', background: `radial-gradient(circle, ${T.accent}20 0%, transparent 60%)`, filter: 'blur(100px)' }}
+                />
+                <motion.div
+                    animate={{ x: [0, -80, 0], y: [0, 100, 0], scale: [1.2, 1, 1.2] }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    style={{ position: 'absolute', top: '-20%', left: '-10%', width: '70%', height: '70%', background: `radial-gradient(circle, ${T.accent}15 0%, transparent 70%)`, filter: 'blur(80px)' }}
+                    style={{ position: 'absolute', bottom: '-20%', right: '-30%', width: '120%', height: '120%', background: 'radial-gradient(circle, #6366f115 0%, transparent 50%)', filter: 'blur(120px)' }}
                 />
-                <motion.div
-                    animate={{
-                        scale: [1.2, 1, 1.2],
-                        rotate: [0, -120, 0],
-                        x: [0, -60, 0],
-                        y: [0, 40, 0]
-                    }}
-                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                    style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #4F46E510 0%, transparent 70%)', filter: 'blur(80px)' }}
-                />
+                <div style={{ position: 'absolute', inset: 0, background: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")', opacity: 0.03 }} />
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{ width: '100%', maxWidth: 420, zIndex: 10, position: 'relative' }}
-            >
-                {/* LOGO AREA */}
-                <div style={{ textAlign: 'center', marginBottom: 45 }}>
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative' }}>
+                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+                    {/* SLEEK LOGO SECTION */}
+                    <div style={{ marginBottom: 60, textAlign: 'center' }}>
                         <motion.div
-                            animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                            style={{ position: 'absolute', inset: -15, border: `1px dashed ${T.accent}30`, borderRadius: '45%' }}
-                        />
-                        <motion.div
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                            style={{ width: 90, height: 90, borderRadius: 32, background: `linear-gradient(135deg, ${T.accent}, #FFD700)`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 25px 60px ${T.accent}40`, position: 'relative' }}
+                            initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                            style={{ position: 'relative', display: 'inline-block' }}
                         >
-                            <ShieldCheck size={45} color="#000" />
-                        </motion.div>
-                    </div>
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                        style={{ fontSize: 36, fontWeight: '900', margin: '25px 0 0', letterSpacing: -1.5, background: 'linear-gradient(to bottom, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-                    >
-                        Farobiy Market
-                    </motion.h1>
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 0.4 }}
-                        style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 5, marginTop: 8, color: T.accent }}
-                    >
-                        ENTERPRISE MANAGEMENT
-                    </motion.div>
-                </div>
-
-                {/* LOGIN CARD */}
-                <div style={{
-                    background: 'rgba(15, 15, 20, 0.6)',
-                    backdropFilter: 'blur(40px)',
-                    padding: '45px 35px',
-                    borderRadius: 48,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: '0 50px 100px rgba(0,0,0,0.8), inset 0 0 80px rgba(255,255,255,0.02)'
-                }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 25 }}>
-                        <div style={{ position: 'relative' }}>
-                            <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 12, opacity: 0.8 }}>LOGIN ID</div>
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    value={loginData.user}
-                                    onChange={e => setLoginData({ ...loginData, user: e.target.value })}
-                                    placeholder="Username"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '22px 28px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.3s' }}
-                                />
-                                <User size={18} style={{ position: 'absolute', right: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.2 }} />
+                            <div style={{ position: 'absolute', inset: -20, background: `${T.accent}10`, filter: 'blur(30px)', borderRadius: '50%' }} />
+                            <motion.div
+                                animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                style={{ position: 'absolute', inset: -10, border: `1px solid ${T.accent}30`, borderRadius: 30, opacity: 0.5 }}
+                            />
+                            <div style={{ width: 85, height: 85, borderRadius: 28, background: `linear-gradient(135deg, ${T.accent}, #FFD700)`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 25px 50px ${T.accent}40`, position: 'relative', zIndex: 2 }}>
+                                <ShieldCheck size={40} color="#000" strokeWidth={2.5} />
                             </div>
+                        </motion.div>
+                        <h1 style={{ fontSize: 40, fontWeight: '1000', margin: '30px 0 5px', letterSpacing: -2, background: 'linear-gradient(to bottom, #fff 40%, rgba(255,255,255,0.4))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Farobiy</h1>
+                        <div style={{ fontSize: 10, fontWeight: '1000', letterSpacing: 6, color: T.accent, opacity: 0.8 }}>MARKET OS</div>
+                    </div>
+
+                    {/* MINIMALIST FORM */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                value={loginData.user}
+                                onChange={e => setLoginData({ ...loginData, user: e.target.value })}
+                                placeholder="Manager ID"
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '24px 30px 24px 60px', borderRadius: 30, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.4s', backdropFilter: 'blur(10px)' }}
+                            />
+                            <User size={20} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
                         </div>
 
                         <div style={{ position: 'relative' }}>
-                            <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 12, opacity: 0.8 }}>SECURITY KEY</div>
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    type="password"
-                                    value={loginData.pass}
-                                    onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
-                                    placeholder="••••••••"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '22px 28px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.3s' }}
-                                />
-                                <Lock size={18} style={{ position: 'absolute', right: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.2 }} />
-                            </div>
+                            <input
+                                type="password"
+                                value={loginData.pass}
+                                onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
+                                placeholder="Access Key"
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '24px 30px 24px 60px', borderRadius: 30, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.4s', backdropFilter: 'blur(10px)' }}
+                            />
+                            <Lock size={20} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
                         </div>
 
                         <motion.button
-                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => {
                                 if (loginData.user === '111' && loginData.pass === '111') {
                                     setIsAuthenticated(true);
                                     localStorage.setItem('fb_auth', 'true');
-                                    showToast("Xush kelibsiz! Panelingiz tayyor. 🚀");
+                                    showToast("Sessiya faollashtirildi ⚡");
                                 } else {
-                                    showToast("Kalit yoki Login noto'g'ri! 🔐");
+                                    showToast("Xavfsizlik xatosi! ❌");
                                 }
                             }}
                             style={{
                                 width: '100%',
-                                height: 75,
+                                height: 80,
                                 background: `linear-gradient(135deg, ${T.accent}, #FFD700)`,
                                 border: 'none',
-                                borderRadius: 24,
+                                borderRadius: 30,
                                 color: '#000',
                                 fontSize: 16,
                                 fontWeight: '1000',
                                 letterSpacing: 1,
                                 boxShadow: `0 20px 40px ${T.accent}30`,
                                 cursor: 'pointer',
-                                marginTop: 15
+                                marginTop: 10
                             }}
                         >
-                            TIZIMNI FAOLLASHTIRISH
+                            TIZIMGA KIRISH
                         </motion.button>
                     </div>
+                </motion.div>
+            </div>
 
-                    <div style={{ marginTop: 35, textAlign: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: 0.2 }}>
-                            <div style={{ height: 1, flex: 1, background: '#fff' }} />
-                            <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 3 }}>ENCRYPTED SESSION</div>
-                            <div style={{ height: 1, flex: 1, background: '#fff' }} />
-                        </div>
-                    </div>
+            {/* MINIMAL FOOTER */}
+            <div style={{ textAlign: 'center', padding: '20px 0', zIndex: 10 }}>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4, opacity: 0.2, color: '#fff' }}>
+                    QUANTUM ENGINE • v4.41
                 </div>
-
-                {/* VERSION FOOTER */}
-                <div style={{ textAlign: 'center', marginTop: 45, opacity: 0.2 }}>
-                    <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.40</div>
-                    <div style={{ fontSize: 7, fontWeight: '900', marginTop: 5, letterSpacing: 1 }}>© 2026 ELITE SYSTEM ARCHITECTURE</div>
-                </div>
-            </motion.div>
+            </div>
         </div>
     );
 
@@ -585,7 +543,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.40 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.41 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -768,7 +726,7 @@ export default function App() {
                         </div>
 
                         <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.40
+                            FAROBIY MARKET • v4.41
                         </div>
                     </motion.div>
                 )}
