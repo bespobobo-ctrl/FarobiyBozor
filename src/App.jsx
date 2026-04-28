@@ -143,18 +143,20 @@ export default function App() {
         return { totalCost, totalValue, profit: totalValue - totalCost };
     }, [products]);
 
-    const financeStats = useMemo(() => {
+    const stats = useMemo(() => {
         const calculateForPeriod = (days) => {
             const now = new Date();
-            const cutoff = new Date(now.setDate(now.getDate() - days));
-            const periodLogs = logs.filter(l => new Date(l.date) >= cutoff);
-            const prevCutoff = new Date(new Date(cutoff).setDate(cutoff.getDate() - days));
-            const prevLogs = logs.filter(l => new Date(l.date) >= prevCutoff && new Date(l.date) < cutoff);
+            const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+            const periodLogs = logs.filter(l => new Date(l.date || l.created_at) >= cutoff);
+            const prevCutoff = new Date(cutoff.getTime() - (days * 24 * 60 * 60 * 1000));
+            const prevLogs = logs.filter(l => {
+                const d = new Date(l.date || l.created_at);
+                return d >= prevCutoff && d < cutoff;
+            });
 
             const getMetrics = (items) => {
                 const revenue = items.filter(l => l.type === 'SAVDO').reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
                 const expense = items.filter(l => l.type === 'EXPENSE').reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
-                // Estimate COGS: find buy_price from products
                 const cogs = items.filter(l => l.type === 'SAVDO').reduce((sum, l) => {
                     const prod = products.find(p => p.name === l.name);
                     return sum + (prod ? (Number(prod.buy_price) || 0) * (Number(l.qty) || 1) : 0);
@@ -174,17 +176,11 @@ export default function App() {
         const weekly = calculateForPeriod(7);
         const monthly = calculateForPeriod(30);
         const yearly = calculateForPeriod(365);
-
         const totalDebt = logs.filter(l => l.type === 'SAVDO' && l.status === 'debt').reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
 
         return { daily, weekly, monthly, yearly, totalDebt };
     }, [logs, products]);
 
-    const stats = useMemo(() => {
-        const calc = (date) => sales.filter(s => new Date(s.date) >= date).reduce((sum, s) => sum + s.total, 0);
-        const now = new Date();
-        return { daily: calc(new Date(new Date(now).setHours(0, 0, 0, 0))), weekly: calc(new Date(new Date(now).setDate(now.getDate() - 7))) };
-    }, [sales]);
 
     const T = {
         bg: isDark ? '#08080C' : '#FAF8F5',
@@ -499,7 +495,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.51 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.52 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -526,7 +522,7 @@ export default function App() {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         <div style={{ background: T.card, padding: 35, borderRadius: 36, marginBottom: 25, boxShadow: `0 30px 60px ${T.shadow}`, border: `1px solid ${T.border}` }}>
                             <div style={{ fontSize: 10, fontWeight: '900', opacity: 0.4, letterSpacing: 2, marginBottom: 10 }}>KUNLIK SAVDO</div>
-                            <div style={{ fontSize: 42, fontWeight: '1000' }}><AnimatedNumber value={stats.daily} /> <small style={{ fontSize: 14, opacity: 0.2 }}>SOM</small></div>
+                            <div style={{ fontSize: 42, fontWeight: '1000' }}><AnimatedNumber value={stats.daily.revenue} /> <small style={{ fontSize: 14, opacity: 0.2 }}>SOM</small></div>
                         </div>
 
                         <div style={{ display: 'flex', gap: 15, marginBottom: 40 }}>
@@ -978,7 +974,7 @@ export default function App() {
                                 </div>
 
                                 {(() => {
-                                    const d = period === 'day' ? financeStats.daily : period === 'week' ? financeStats.weekly : period === 'month' ? financeStats.monthly : financeStats.yearly;
+                                    const d = period === 'day' ? stats.daily : period === 'week' ? stats.weekly : period === 'month' ? stats.monthly : stats.yearly;
                                     return (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                             {/* MAIN PROFIT CARD */}
@@ -1011,7 +1007,7 @@ export default function App() {
                                                 </div>
                                                 <div style={{ background: T.card, padding: 22, borderRadius: 32, border: `1px solid ${T.border}` }}>
                                                     <div style={{ fontSize: 9, fontWeight: '1000', opacity: 0.4, marginBottom: 8 }}>QARZDORLIK</div>
-                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: T.accent }}>{financeStats.totalDebt.toLocaleString()}</div>
+                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: T.accent }}>{stats.totalDebt.toLocaleString()}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1024,10 +1020,10 @@ export default function App() {
                                 {/* EXPENSE SUMMARY CARDS */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     {[
-                                        { label: 'KUNLIK', val: financeStats.daily.expense },
-                                        { label: 'HAFTALIK', val: financeStats.weekly.expense },
-                                        { label: 'OYLIK', val: financeStats.monthly.expense },
-                                        { label: 'YILLIK', val: financeStats.yearly.expense }
+                                        { label: 'KUNLIK', val: stats.daily.expense },
+                                        { label: 'HAFTALIK', val: stats.weekly.expense },
+                                        { label: 'OYLIK', val: stats.monthly.expense },
+                                        { label: 'YILLIK', val: stats.yearly.expense }
                                     ].map(item => (
                                         <div key={item.label} style={{ background: T.card, padding: '15px 20px', borderRadius: 24, border: `1px solid ${T.border}` }}>
                                             <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>{item.label} HARAJAT</div>
