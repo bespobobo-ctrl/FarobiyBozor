@@ -8,7 +8,8 @@ import {
     PieChart, Inbox, LogIn, LogOut, ArrowUpRight, ArrowDownRight, Phone, Edit, Save,
     Settings, Trash2, Layers, User, Calendar, Activity, Zap, CreditCard, Lock,
     Target, Globe, ShieldCheck, ChevronDown, LayoutGrid, Command, Bell, Cpu, MoreVertical,
-    ArrowLeft, Palette, Sun, Moon, RefreshCw, Hash, Scissors, Printer, QrCode, Tag
+    ArrowLeft, Palette, Sun, Moon, RefreshCw, Hash, Scissors, Printer, QrCode, Tag,
+    ShieldOff, CheckCircle, Edit3
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -488,7 +489,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.65 ELITE PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.66 ELITE PRO</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -552,7 +553,7 @@ export default function App() {
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.65 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.66 • 2026</div>
             </div>
         </div>
     );
@@ -568,7 +569,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY MARKET'}</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.65</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.66</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -681,6 +682,7 @@ export default function App() {
                                                 password: document.getElementById('profPass').value,
                                                 dashboard_title: document.getElementById('profTitle').value
                                             };
+                                            if (!currentShop?.id) return showToast("Dukon aniqlanmadi!");
                                             const { error } = await supabase.from('fb_shops').update(u).eq('id', currentShop.id);
                                             if (error) return showToast("Xatolik! " + error.message);
                                             const final = { ...currentShop, ...u };
