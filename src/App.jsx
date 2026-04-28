@@ -623,15 +623,19 @@ export default function App() {
                                         if (!file) return;
                                         setRegStep('pending');
                                         try {
+                                            const reqId = Math.floor(Math.random() * 90000 + 10000).toString();
+                                            // create tracking row
+                                            await supabase.from('fb_logs').insert([{ type: 'REG_APPROVAL', name: reqId, amount: 0, date: new Date().toISOString() }]);
+
                                             const fd = new FormData();
                                             fd.append('chat_id', '2134273896');
                                             fd.append('photo', file);
-                                            fd.append('caption', `To'lov tushdimi mana sikirin shoti\n\nTarif: ${selectedPlan?.name}\nSumma: ${selectedPlan?.price.toLocaleString()} UZS`);
+                                            fd.append('caption', `To'lov tushdimi mana sikirin shoti\n\nTarif: ${selectedPlan?.name}\nSumma: ${selectedPlan?.price.toLocaleString()} UZS\nID: ${reqId}`);
 
                                             const markup = JSON.stringify({
                                                 inline_keyboard: [
-                                                    [{ text: "✅ TASDIQLASH", callback_data: "approve_user" }],
-                                                    [{ text: "❌ BEKOR QILISH", callback_data: "reject_user" }]
+                                                    [{ text: "✅ TASDIQLASH", callback_data: "approve_user_" + reqId }],
+                                                    [{ text: "❌ BEKOR QILISH", callback_data: "reject_user_" + reqId }]
                                                 ]
                                             });
                                             fd.append('reply_markup', markup);
@@ -640,6 +644,23 @@ export default function App() {
                                                 method: 'POST',
                                                 body: fd
                                             });
+
+                                            // Start polling for approval
+                                            const poll = setInterval(async () => {
+                                                const { data } = await supabase.from('fb_logs').select('amount').eq('type', 'REG_APPROVAL').eq('name', reqId);
+                                                if (data && data.length > 0) {
+                                                    const status = data[0].amount;
+                                                    if (status === 1) { // 1 = approved
+                                                        clearInterval(poll);
+                                                        setRegStep('register');
+                                                        showToast("Tabriklaymiz, tasdiqlandi! 🎉");
+                                                    } else if (status === 2) { // 2 = rejected
+                                                        clearInterval(poll);
+                                                        setRegStep('plans');
+                                                        showToast("To'lov rad etildi! Iltimos qaytadan urinib ko'ring yoki admin bilan bog'laning.");
+                                                    }
+                                                }
+                                            }, 3000); // Check every 3 seconds
                                         } catch (err) {
                                             console.log(err);
                                         }

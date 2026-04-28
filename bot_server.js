@@ -51,3 +51,24 @@ async function saveExpenseToDB(data) {
     }]);
     if (error) throw error;
 }
+
+// --- CALLBACK HANDLING (TASDIQLASH) ---
+bot.on('callback_query', async (query) => {
+    const data = query.data;
+    const msg = query.message;
+
+    if (data.startsWith('approve_user_') || data.startsWith('reject_user_')) {
+        const reqId = data.split('_')[2];
+        const isApprove = data.startsWith('approve');
+
+        // Update Supabase logging flags to communicate with frontend
+        await supabase.from('fb_logs')
+            .update({ amount: isApprove ? 1 : 2 })
+            .eq('type', 'REG_APPROVAL')
+            .eq('name', reqId);
+
+        bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: msg.chat.id, message_id: msg.message_id });
+        bot.sendMessage(msg.chat.id, isApprove ? `✅ To'lov tasdiqlandi (ID: ${reqId}). Foydalanuvchi tizimga kiritildi.` : `❌ To'lov rad etildi (ID: ${reqId}). Foydalanuvchiga xabar berildi.`);
+        bot.answerCallbackQuery(query.id, { text: "Bajarildi!" });
+    }
+});
