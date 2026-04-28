@@ -144,9 +144,12 @@ export default function App() {
     }, [products]);
 
     const stats = useMemo(() => {
-        const calculateForPeriod = (days) => {
+        const calculateForPeriod = (days, isCalendarDay = false) => {
             const now = new Date();
-            const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+            const cutoff = isCalendarDay
+                ? new Date(new Date().setHours(0, 0, 0, 0))
+                : new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+
             const periodLogs = logs.filter(l => new Date(l.date || l.created_at) >= cutoff);
             const prevCutoff = new Date(cutoff.getTime() - (days * 24 * 60 * 60 * 1000));
             const prevLogs = logs.filter(l => {
@@ -157,12 +160,13 @@ export default function App() {
             const getMetrics = (items) => {
                 const revenue = items.filter(l => l.type === 'SAVDO').reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
                 const expense = items.filter(l => l.type === 'EXPENSE').reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+                const kirimCount = items.filter(l => l.type === 'KIRIM').length;
                 const cogs = items.filter(l => l.type === 'SAVDO').reduce((sum, l) => {
                     const prod = products.find(p => p.name === l.name);
                     return sum + (prod ? (Number(prod.buy_price) || 0) * (Number(l.qty) || 1) : 0);
                 }, 0);
                 const profit = revenue - cogs - expense;
-                return { revenue, expense, cogs, profit };
+                return { revenue, expense, cogs, profit, kirimCount };
             };
 
             const curr = getMetrics(periodLogs);
@@ -172,7 +176,7 @@ export default function App() {
             return { ...curr, growth };
         };
 
-        const daily = calculateForPeriod(1);
+        const daily = calculateForPeriod(1, true);
         const weekly = calculateForPeriod(7);
         const monthly = calculateForPeriod(30);
         const yearly = calculateForPeriod(365);
@@ -495,7 +499,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.52 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.53 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -520,8 +524,9 @@ export default function App() {
             <div style={{ padding: '0 25px' }}>
                 {tab === 'dashboard' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <div style={{ background: T.card, padding: 35, borderRadius: 36, marginBottom: 25, boxShadow: `0 30px 60px ${T.shadow}`, border: `1px solid ${T.border}` }}>
-                            <div style={{ fontSize: 10, fontWeight: '900', opacity: 0.4, letterSpacing: 2, marginBottom: 10 }}>KUNLIK SAVDO</div>
+                        <div style={{ background: T.card, padding: 35, borderRadius: 36, marginBottom: 25, boxShadow: `0 30px 60px ${T.shadow}`, border: `1px solid ${T.border}`, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: 0, right: 0, padding: '15px 20px', background: `${T.accent}10`, borderRadius: '0 0 0 24px', fontSize: 10, fontWeight: '1000', color: T.accent }}>{stats.daily.kirimCount} KIRIM BUGUN</div>
+                            <div style={{ fontSize: 10, fontWeight: '900', opacity: 0.4, letterSpacing: 2, marginBottom: 10 }}>BUGUNGI SAVDO</div>
                             <div style={{ fontSize: 42, fontWeight: '1000' }}><AnimatedNumber value={stats.daily.revenue} /> <small style={{ fontSize: 14, opacity: 0.2 }}>SOM</small></div>
                         </div>
 
@@ -1564,7 +1569,7 @@ export default function App() {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence> {msg && <motion.div initial={{ y: -50 }} animate={{ y: 0 }} exit={{ y: -50 }} style={{ position: 'fixed', top: 30, left: 30, right: 30, padding: 22, borderRadius: 20, background: T.accent, color: '#000', textAlign: 'center', fontWeight: '1000', zIndex: 10000 }}>{msg}</motion.div>} </AnimatePresence>
+            <AnimatePresence> {msg && <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', bottom: 130, left: 25, right: 25, padding: '18px 25px', borderRadius: 24, background: `linear-gradient(135deg, ${T.accent}, #FFD700)`, color: '#000', textAlign: 'center', fontWeight: '1000', zIndex: 100000, boxShadow: '0 20px 50px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: '1.5px solid rgba(0,0,0,0.1)' }}><Zap size={18} /> {msg}</motion.div>} </AnimatePresence>
 
             {/* EDIT ITEM MODAL */}
             <AnimatePresence>
