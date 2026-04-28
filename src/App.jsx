@@ -49,6 +49,7 @@ export default function App() {
     const [showCalendar, setShowCalendar] = useState(false);
     const [historyType, setHistoryType] = useState('ALL');
     const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
+    const [historyPeriod, setHistoryPeriod] = useState('day');
 
     // Kirim Form (Pachka System)
     const [sizeMode, setSizeMode] = useState('num');
@@ -1015,9 +1016,25 @@ export default function App() {
                 {tab === 'history' && (() => {
                     const filteredLogs = logs.filter(l => {
                         const matchesType = historyType === 'ALL' || l.type === historyType;
-                        const logDate = new Date(l.date || l.created_at).toISOString().split('T')[0];
-                        const matchesDate = !historyDate || logDate === historyDate;
-                        return matchesType && matchesDate;
+                        const logDate = new Date(l.date || l.created_at);
+                        const today = new Date();
+
+                        let matchesPeriod = false;
+                        if (historyPeriod === 'day') {
+                            matchesPeriod = logDate.toDateString() === today.toDateString();
+                        } else if (historyPeriod === 'week') {
+                            const weekAgo = new Date();
+                            weekAgo.setDate(today.getDate() - 7);
+                            matchesPeriod = logDate >= weekAgo;
+                        } else if (historyPeriod === 'month') {
+                            matchesPeriod = logDate.getMonth() === today.getMonth() && logDate.getFullYear() === today.getFullYear();
+                        } else if (historyPeriod === 'year') {
+                            matchesPeriod = logDate.getFullYear() === today.getFullYear();
+                        } else if (historyPeriod === 'custom') {
+                            const dateStr = logDate.toISOString().split('T')[0];
+                            matchesPeriod = dateStr === historyDate;
+                        }
+                        return matchesType && matchesPeriod;
                     });
 
                     // History Stats
@@ -1026,39 +1043,51 @@ export default function App() {
                         week: logs.filter(l => {
                             const d = new Date(l.date || l.created_at);
                             const now = new Date();
-                            const weekAgo = new Date(now.setDate(now.getDate() - 7));
-                            return d >= weekAgo && l.type === 'SAVDO';
+                            now.setDate(now.getDate() - 7);
+                            return d >= now && l.type === 'SAVDO';
                         }).reduce((s, x) => s + (Number(x.amount) || 0), 0),
                         month: logs.filter(l => new Date(l.date || l.created_at).getMonth() === new Date().getMonth() && l.type === 'SAVDO').reduce((s, x) => s + (Number(x.amount) || 0), 0),
+                        year: logs.filter(l => new Date(l.date || l.created_at).getFullYear() === new Date().getFullYear() && l.type === 'SAVDO').reduce((s, x) => s + (Number(x.amount) || 0), 0),
                     };
 
                     return (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                             {/* PREMIUM HISTORY HEADER */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
-                                <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Tarix <small style={{ fontSize: 12, opacity: 0.3, letterSpacing: 2 }}>ANALITIKA</small></h2>
+                                <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Tarix <small style={{ fontSize: 12, opacity: 0.3, letterSpacing: 2 }}>{historyPeriod.toUpperCase()}</small></h2>
                                 <input
                                     type="date"
                                     value={historyDate}
-                                    onChange={(e) => setHistoryDate(e.target.value)}
+                                    onChange={(e) => {
+                                        setHistoryDate(e.target.value);
+                                        setHistoryPeriod('custom');
+                                    }}
                                     style={{ background: T.card, color: T.text, border: `1px solid ${T.border}`, padding: '8px 12px', borderRadius: 12, fontSize: 12, fontWeight: '800', outline: 'none' }}
                                 />
                             </div>
 
-                            {/* MINI STATS CARDS */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 25 }}>
-                                <div style={{ background: T.card, padding: '15px 10px', borderRadius: 24, border: `1px solid ${T.border}`, textAlign: 'center' }}>
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>BUGUN</div>
-                                    <div style={{ fontSize: 14, fontWeight: '1000', color: '#10B981' }}>{hStats.day.toLocaleString()}</div>
-                                </div>
-                                <div style={{ background: T.card, padding: '15px 10px', borderRadius: 24, border: `1px solid ${T.border}`, textAlign: 'center' }}>
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>HAFTALIK</div>
-                                    <div style={{ fontSize: 14, fontWeight: '1000', color: T.accent }}>{hStats.week.toLocaleString()}</div>
-                                </div>
-                                <div style={{ background: T.card, padding: '15px 10px', borderRadius: 24, border: `1px solid ${T.border}`, textAlign: 'center' }}>
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 5 }}>OYLIK</div>
-                                    <div style={{ fontSize: 14, fontWeight: '1000', color: T.text }}>{hStats.month.toLocaleString()}</div>
-                                </div>
+                            {/* MINI STATS CARDS / FILTERS */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 25 }}>
+                                {[
+                                    { id: 'day', label: 'BUGUN', value: hStats.day },
+                                    { id: 'week', label: 'HAFTA', value: hStats.week },
+                                    { id: 'month', label: 'OY', value: hStats.month },
+                                    { id: 'year', label: 'YIL', value: hStats.year }
+                                ].map(p => (
+                                    <motion.div
+                                        key={p.id}
+                                        onClick={() => setHistoryPeriod(p.id)}
+                                        whileTap={{ scale: 0.9 }}
+                                        style={{
+                                            background: historyPeriod === p.id ? T.accent : T.card,
+                                            color: historyPeriod === p.id ? '#000' : T.text,
+                                            padding: '12px 5px', borderRadius: 20, border: `1px solid ${historyPeriod === p.id ? T.accent : T.border}`, textAlign: 'center', cursor: 'pointer', transition: '0.3s'
+                                        }}
+                                    >
+                                        <div style={{ fontSize: 7, fontWeight: '1000', opacity: historyPeriod === p.id ? 0.6 : 0.4, marginBottom: 4 }}>{p.label}</div>
+                                        <div style={{ fontSize: 11, fontWeight: '1000' }}>{p.value > 1000000 ? (p.value / 1000000).toFixed(1) + 'M' : (p.value / 1000).toFixed(0) + 'K'}</div>
+                                    </motion.div>
+                                ))}
                             </div>
 
                             {/* TYPE FILTER CHIPS */}
@@ -1100,18 +1129,20 @@ export default function App() {
                                             <div style={{ width: 42, height: 42, borderRadius: 14, background: l.type === 'SAVDO' ? '#10B98115' : l.type === 'EXPENSE' ? '#FF646415' : l.type === 'DELETE' ? '#FF444415' : `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 {l.type === 'SAVDO' ? <TrendingUp size={18} color="#10B981" /> : l.type === 'EXPENSE' ? <ArrowDownLeft size={18} color="#FF6464" /> : l.type === 'DELETE' ? <Trash2 size={18} color="#FF4444" /> : l.type === 'EDIT' ? <Edit size={18} color={T.accent} /> : <Package size={18} color={T.accent} />}
                                             </div>
-                                            <div>
-                                                <div style={{ fontWeight: '800', fontSize: 15 }}>{l.name}</div>
-                                                <div style={{ fontSize: 10, opacity: 0.3, fontWeight: '800', marginTop: 4 }}>{new Date(l.date || l.created_at).toLocaleTimeString('uz-UZ')} • {l.type}</div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: '800', fontSize: 13, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</div>
+                                                <div style={{ fontSize: 9, opacity: 0.3, fontWeight: '800', marginTop: 4 }}>{new Date(l.date || l.created_at).toLocaleTimeString('uz-UZ')} • {l.type}</div>
                                             </div>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
-                                            {l.amount > 0 && (
-                                                <div style={{ fontWeight: '1000', fontSize: 16, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>
+                                            {l.amount > 0 ? (
+                                                <div style={{ fontWeight: '1000', fontSize: 14, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>
                                                     {l.type === 'EXPENSE' ? '-' : '+'}{Number(l.amount).toLocaleString()}
                                                 </div>
+                                            ) : (
+                                                <div style={{ fontSize: 10, opacity: 0.4, fontWeight: '1000' }}>BAJARILDI</div>
                                             )}
-                                            <div style={{ fontSize: 9, opacity: 0.2, fontWeight: '1000' }}>{new Date(l.date || l.created_at).toLocaleDateString('uz-UZ')}</div>
+                                            <div style={{ fontSize: 8, opacity: 0.2, fontWeight: '1000' }}>{new Date(l.date || l.created_at).toLocaleDateString('uz-UZ')}</div>
                                         </div>
                                     </motion.div>
                                 ))}
