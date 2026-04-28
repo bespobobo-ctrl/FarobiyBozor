@@ -807,8 +807,16 @@ export default function App() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                     <Clock size={18} color={trialDaysLeft < 5 ? '#FF6464' : T.accent} />
                                     <div>
-                                        <div style={{ fontSize: 11, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.text }}>SINOV MUDDATI (FREE TRIAL)</div>
-                                        <div style={{ fontSize: 10, opacity: 0.6, fontWeight: '700' }}>Bepul foydalanish tugashiga</div>
+                                        {(() => {
+                                            let planName = "SINOV MUDDATI (FREE TRIAL)";
+                                            if (currentShop?.dashboard_title === '90') planName = "PREMIUM TARIF";
+                                            else if (currentShop?.dashboard_title === '365') planName = "SUPER PREMIUM TARIF";
+                                            else if (currentShop?.dashboard_title === '30') planName = "ODDIY TARIF 1 OYLIK";
+                                            return <div style={{ fontSize: 11, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.text, textTransform: 'uppercase' }}>{planName}</div>;
+                                        })()}
+                                        <div style={{ fontSize: 10, opacity: 0.6, fontWeight: '700' }}>
+                                            {currentShop?.dashboard_title && ['90', '365'].includes(currentShop.dashboard_title) ? "Litsenziya muddati tugashiga" : "Foydalanish muddati tugashiga"}
+                                        </div>
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
@@ -1630,12 +1638,19 @@ export default function App() {
                         {trialDaysLeft !== null && (
                             <div style={{ background: T.card, padding: 30, borderRadius: 36, border: `2px solid ${trialDaysLeft < 5 ? '#FF6464' : T.accent}40`, marginBottom: 30, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: trialDaysLeft < 5 ? '#FF6464' : T.accent }} />
-                                <div style={{ fontSize: 10, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.accent, letterSpacing: 2, marginBottom: 10 }}>SINOV / LITSENZIYA QOLDIG'I</div>
+                                <div style={{ fontSize: 10, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.accent, letterSpacing: 2, marginBottom: 10 }}>
+                                    {(() => {
+                                        if (currentShop?.dashboard_title === '90') return "PREMIUM TARIF QOLDIG'I";
+                                        if (currentShop?.dashboard_title === '365') return "SUPER PREMIUM TARIF QOLDIG'I";
+                                        if (currentShop?.dashboard_title === '30') return "ODDIY TARIF QOLDIG'I";
+                                        return "SINOV MUDDATI QOLDIG'I";
+                                    })()}
+                                </div>
                                 <div style={{ fontSize: 48, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.text, lineHeight: 1 }}>
                                     {trialDaysLeft} <span style={{ fontSize: 16, opacity: 0.5 }}>KUN</span>
                                 </div>
                                 <div style={{ fontSize: 12, opacity: 0.6, marginTop: 10, maxWidth: 250, margin: '10px auto 0' }}>
-                                    {trialDaysLeft === 0 ? "Litsenziya muddati tugadi! Tizimdan foydalanish uchun to'lov qiling." : "Oy tugaguncha bepul ishlatishingiz mumkin. KUNLAR QOLGANIDA TARIF SOTIB OLISHNI UNUTMANG."}
+                                    {trialDaysLeft === 0 ? "Litsenziya muddati tugadi! Tizimdan foydalanish uchun to'lov qiling." : "Foydalanish muddati tugaguncha bemalol ishlating. KUNLAR QOLGANIDA TARIF SOTIB OLISHNI UNUTMANG."}
                                 </div>
                             </div>
                         )}
