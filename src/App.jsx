@@ -583,7 +583,7 @@ export default function App() {
                                 <ShieldCheck size={40} color="#000" strokeWidth={2.5} />
                             </div>
                         </motion.div>
-                        <h1 style={{ fontSize: 42, fontWeight: '1000', margin: '30px 0 5px', letterSpacing: -2, color: '#fff' }}>Farobiy Market</h1>
+                        <h1 style={{ fontSize: 42, fontWeight: '1000', margin: '30px 0 5px', letterSpacing: -2, color: '#fff' }}>Farobiy Bozori</h1>
                         <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 8, color: showSuperLogin ? '#FF6464' : T.accent, opacity: 0.8 }}>{showSuperLogin ? 'MAXFIY NAZORAT' : 'TIZIMGA KIRISH'}</div>
                     </div>
 
@@ -817,7 +817,7 @@ export default function App() {
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.70 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY BOZORI • v4.70 • 2026</div>
             </div>
         </div>
     );
@@ -832,7 +832,7 @@ export default function App() {
                         <Command size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY MARKET'}</div>
+                        <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY BOZORI'}</div>
                         <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.70</small></h1>
                     </div>
                 </div>
