@@ -44,6 +44,7 @@ export default function App() {
     const [buhTab, setBuhTab] = useState('analytics');
     const [period, setPeriod] = useState('day');
     const [calendarDate, setCalendarDate] = useState(new Date());
+    const [showRecent, setShowRecent] = useState(true);
     const [selectedDay, setSelectedDay] = useState(null);
     const [showCalendar, setShowCalendar] = useState(false);
 
@@ -406,7 +407,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.33 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.34 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
@@ -431,191 +432,136 @@ export default function App() {
                             </motion.button>
                         </div>
 
-                        {/* KALENDAR (ASOSIY SAHIFADA) */}
-                        <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowCalendar(!showCalendar)} style={{ background: `linear-gradient(135deg, ${T.accent}15, ${T.accent}05)`, padding: '18px 22px', borderRadius: 28, border: `1px solid ${T.accent}30`, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                <div style={{ width: 40, height: 40, borderRadius: 14, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Calendar size={20} color={T.accent} />
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2 }}>KUNLIK TAHLIL</div>
-                                    <div style={{ fontSize: 14, fontWeight: '800', marginTop: 2 }}>{selectedDay ? new Date(calendarDate.getFullYear(), calendarDate.getMonth(), selectedDay).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Kunni tanlang'}</div>
-                                </div>
-                            </div>
-                            <ChevronDown size={18} color={T.muted} style={{ transform: showCalendar ? 'rotate(180deg)' : 'rotate(0)', transition: '0.3s' }} />
-                        </motion.div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <h3 style={{ fontSize: 18, fontWeight: '900', margin: 0 }}>So'nggi harakatlar</h3>
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowRecent(!showRecent)} style={{ background: 'transparent', border: 'none', color: T.accent, fontSize: 11, fontWeight: '1000', cursor: 'pointer' }}>
+                                {showRecent ? 'YASHIRISH' : "KO'RSATISH"}
+                            </motion.button>
+                        </div>
 
                         <AnimatePresence>
-                            {showCalendar && (
-                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ marginBottom: 25, overflow: 'hidden' }}>
-                                    <div style={{ background: T.card, borderRadius: 36, padding: 20, border: `1px solid ${T.border}`, boxShadow: `0 20px 40px ${T.shadow}` }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeft size={16} /></motion.button>
-                                            <div style={{ fontSize: 16, fontWeight: '900' }}>{calendarDate.toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })}</div>
-                                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowRight size={16} /></motion.button>
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 }}>
-                                            {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
-                                                <div key={d} style={{ textAlign: 'center', fontSize: 9, fontWeight: '1000', opacity: 0.3, padding: 5 }}>{d}</div>
-                                            ))}
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-                                            {(() => {
-                                                const year = calendarDate.getFullYear();
-                                                const month = calendarDate.getMonth();
-                                                const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
-                                                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                                                const cells = [];
-                                                for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`}></div>);
-                                                for (let d = 1; d <= daysInMonth; d++) {
-                                                    const dayDate = new Date(year, month, d);
-                                                    const isToday = new Date().toDateString() === dayDate.toDateString();
-                                                    const isSelected = selectedDay === d;
-                                                    const dayLogs = logs.filter(l => { const ld = new Date(l.date || l.created_at); return ld.getFullYear() === year && ld.getMonth() === month && ld.getDate() === d; });
-                                                    const hasSales = dayLogs.some(l => l.type === 'SAVDO');
-                                                    const hasExpense = dayLogs.some(l => l.type === 'EXPENSE');
-                                                    cells.push(
-                                                        <motion.div key={d} whileTap={{ scale: 0.9 }} onClick={() => setSelectedDay(isSelected ? null : d)} style={{
-                                                            height: 42, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                                            background: isSelected ? T.accent : isToday ? `${T.accent}15` : 'transparent',
-                                                            color: isSelected ? '#000' : T.text,
-                                                            border: isToday && !isSelected ? `1.5px solid ${T.accent}` : `1px solid transparent`,
-                                                            fontWeight: '900', fontSize: 13, position: 'relative'
-                                                        }}>
-                                                            {d}
-                                                            {(hasSales || hasExpense) && <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
-                                                                {hasSales && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? '#000' : '#10B981' }}></div>}
-                                                                {hasExpense && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? '#000' : '#FF6464' }}></div>}
-                                                            </div>}
-                                                        </motion.div>
-                                                    );
-                                                }
-                                                return cells;
-                                            })()}
-                                        </div>
-                                        {selectedDay && (() => {
-                                            const year = calendarDate.getFullYear();
-                                            const month = calendarDate.getMonth();
-                                            const dayLogs = logs.filter(l => { const ld = new Date(l.date || l.created_at); return ld.getFullYear() === year && ld.getMonth() === month && ld.getDate() === selectedDay; });
-                                            const daySales = dayLogs.filter(l => l.type === 'SAVDO');
-                                            const dayExpenses = dayLogs.filter(l => l.type === 'EXPENSE');
-                                            const totalSales = daySales.reduce((s, l) => s + (Number(l.amount) || 0), 0);
-                                            const totalExpense = dayExpenses.reduce((s, l) => s + (Number(l.amount) || 0), 0);
-                                            return (
-                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 20, borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 15 }}>
-                                                        <div style={{ background: '#10B98110', padding: 12, borderRadius: 18, textAlign: 'center' }}>
-                                                            <div style={{ fontSize: 7, fontWeight: '1000', color: '#10B981' }}>SAVDO</div>
-                                                            <div style={{ fontSize: 14, fontWeight: '1000', color: '#10B981' }}>{totalSales.toLocaleString()}</div>
-                                                        </div>
-                                                        <div style={{ background: 'rgba(255,100,100,0.08)', padding: 12, borderRadius: 18, textAlign: 'center' }}>
-                                                            <div style={{ fontSize: 7, fontWeight: '1000', color: '#FF6464' }}>HARAJAT</div>
-                                                            <div style={{ fontSize: 14, fontWeight: '1000', color: '#FF6464' }}>{totalExpense.toLocaleString()}</div>
-                                                        </div>
+                            {showRecent && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        {logs.slice(0, 3).map(l => (
+                                            <div key={l.id} style={{ display: 'flex', gap: 18, padding: '18px', borderRadius: 24, background: T.card, border: `1px solid ${T.border}`, boxShadow: `0 10px 20px ${T.shadow}` }}>
+                                                <div style={{ width: 45, height: 45, borderRadius: 14, background: l.type === 'SAVDO' ? '#10B98115' : l.type === 'EXPENSE' ? '#FF646415' : `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {l.type === 'SAVDO' ? <TrendingUp size={20} color="#10B981" /> : l.type === 'EXPENSE' ? <ArrowDownLeft size={20} color="#FF6464" /> : <Package size={20} color={T.accent} />}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                                        <div style={{ fontWeight: '900', fontSize: 14 }}>{l.name}</div>
+                                                        <div style={{ fontWeight: '1000', fontSize: 14, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>{l.type === 'EXPENSE' ? '-' : '+'}{(Number(l.amount) || 0).toLocaleString()}</div>
                                                     </div>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
-                                                        {dayLogs.map(l => (
-                                                            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 12, background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${T.border}` }}>
-                                                                <div style={{ fontSize: 11, fontWeight: '800' }}>{l.name}</div>
-                                                                <div style={{ fontWeight: '1000', fontSize: 11, color: l.type === 'SAVDO' ? '#10B981' : '#FF6464' }}>{(Number(l.amount) || 0).toLocaleString()}</div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })()}
+                                                    <div style={{ fontSize: 10, opacity: 0.4, fontWeight: '800' }}>{l.type} • {new Date(l.date || l.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</div>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
+                                    {logs.length === 0 && <div style={{ textAlign: 'center', padding: 30, opacity: 0.4, background: T.card, borderRadius: 24, border: `1px solid ${T.border}` }}>Hozircha harakatlar yo'q 🍃</div>}
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
-                        <h3 style={{ fontSize: 18, fontWeight: '900', marginBottom: 20 }}>So'nggi harakatlar</h3>
-
-                        {logs.slice(0, 5).map(l => (
-                            <div key={l.id} style={{ display: 'flex', gap: 18, padding: '15px 0', borderBottom: `1.5px solid ${T.border}` }}>
-                                <div style={{ width: 50, height: 50, borderRadius: 16, background: T.card, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {l.type === 'SAVDO' ? <Zap size={20} color={T.accent} /> : <QrCode size={20} color="#10B981" />}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: 16, fontWeight: '800' }}>{l.name}</span>
-                                        <span style={{ fontSize: 16, fontWeight: '900' }}>{l.type === 'SAVDO' ? '-' : '+'}{l.qty}</span>
-                                    </div>
-                                    <div style={{ fontSize: 11, opacity: 0.4 }}>{(Number(l.amount) || 0).toLocaleString()} SOM • {new Date(l.date || new Date()).toLocaleTimeString()}</div>
-                                </div>
-                            </div>
-                        ))}
                     </motion.div>
                 )}
 
                 {tab === 'settings' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <h2 style={{ fontSize: 32, fontWeight: '900', marginBottom: 30 }}>Tizim Sozlamalari</h2>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: '0 5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 35 }}>
+                            <div style={{ width: 60, height: 60, borderRadius: 22, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: `0 15px 35px ${T.accent}30` }}>
+                                <Settings size={28} />
+                            </div>
+                            <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Sozlamalar</h2>
+                        </div>
 
-                        <div style={{ background: T.card, padding: 25, borderRadius: 32, border: `1px solid ${T.border}`, marginBottom: 25, boxShadow: `0 20px 40px ${T.shadow}` }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 25 }}>
-                                <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <LayoutGrid size={20} color={T.accent} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 25 }}>
+                            {/* CATEGORY MANAGEMENT */}
+                            <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.border}`, boxShadow: `0 20px 40px ${T.shadow}` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Kategoriyalar</h3>
                                 </div>
-                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Kategoriyalarni boshqarish</h3>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: 12, marginBottom: 25 }}>
-                                <input
-                                    value={newCat}
-                                    onChange={e => setNewCat(e.target.value)}
-                                    placeholder="Yangi turkum nomi..."
-                                    style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '18px 22px', borderRadius: 20, color: T.text, outline: 'none', fontWeight: '800', fontSize: 14 }}
-                                />
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={async () => {
-                                        if (!newCat.trim()) return showToast("Nom kiriting!");
-                                        if (categories.includes(newCat.trim())) return showToast("Bunday turkum bor!");
-
-                                        const { error } = await supabase.from('fb_categories').insert([{ name: newCat.trim() }]);
-                                        if (error) return showToast("Saqlashda xatolik: " + error.message);
-
-                                        setCategories([...categories, newCat.trim()]);
-                                        setNewCat('');
-                                        showToast("Turkum bazaga saqlandi! ✅");
-                                    }}
-                                    style={{ background: T.accent, border: 'none', width: 60, height: 60, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: `0 10px 20px ${T.accent}30` }}
-                                >
-                                    <Plus size={24} />
-                                </motion.button>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {categories.map(c => (
-                                    <motion.div
-                                        key={c}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderRadius: 18, border: `1px dashed ${T.border}` }}
+                                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                                    <input
+                                        value={newCat}
+                                        onChange={e => setNewCat(e.target.value)}
+                                        placeholder="Yangi turkum..."
+                                        style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }}
+                                    />
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={async () => {
+                                            if (!newCat.trim()) return;
+                                            const { error } = await supabase.from('fb_categories').insert([{ name: newCat.trim() }]);
+                                            if (error) return showToast("Xatolik");
+                                            setCategories([...categories, newCat.trim()]);
+                                            setNewCat('');
+                                            showToast("Qo'shildi! ✅");
+                                        }}
+                                        style={{ width: 55, height: 55, borderRadius: 18, background: T.accent, color: '#000', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     >
-                                        <span style={{ fontWeight: '800', opacity: 0.9, fontSize: 15 }}>{c}</span>
-                                        <motion.button
-                                            whileTap={{ scale: 0.8 }}
-                                            onClick={async () => {
-                                                const { error } = await supabase.from('fb_categories').delete().eq('name', c);
-                                                if (error) return showToast("O'chirishda xatolik");
-
+                                        <Plus size={24} />
+                                    </motion.button>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                    {categories.map(c => (
+                                        <div key={c} style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', padding: '10px 18px', borderRadius: 15, border: `1px dashed ${T.border}`, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: '800' }}>
+                                            {c}
+                                            <Trash2 size={14} color="#FF6464" style={{ cursor: 'pointer' }} onClick={async () => {
+                                                if (!confirm("O'chirilsinmi?")) return;
+                                                await supabase.from('fb_categories').delete().eq('name', c);
                                                 setCategories(categories.filter(x => x !== c));
-                                                showToast("Turkum bazadan o'chirildi! 🗑️");
-                                            }}
-                                            style={{ background: 'rgba(255,100,100,0.1)', border: 'none', color: '#FF6464', width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                        >
-                                            <Trash2 size={16} />
-                                        </motion.button>
-                                    </motion.div>
-                                ))}
+                                            }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* DATA MANAGEMENT - DANGER ZONE */}
+                            <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid rgba(255,100,100,0.2)`, boxShadow: `0 20px 40px ${T.shadow}` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                                    <div style={{ width: 35, height: 35, borderRadius: 10, background: 'rgba(255,100,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <AlertTriangle size={18} color="#FF6464" />
+                                    </div>
+                                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900', color: '#FF6464' }}>Ma'lumotlarni boshqarish</h3>
+                                </div>
+                                <p style={{ fontSize: 11, opacity: 0.5, marginBottom: 25, lineHeight: 1.5 }}>
+                                    Eslatma: Ombor tozalanganidan keyin statistika (foyda/harajat) natijalari saqlanib qolishi uchun loglarni (tarix) ham qo'lda tozalash kerak bo'lishi mumkin.
+                                </p>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                                    <motion.button
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={async () => {
+                                            if (!confirm("Barcha TARIXNI o'chirib, hisobotlarni nolga tushirasizmi? Bu amalni orqaga qaytarib bo'lmaydi!")) return;
+                                            const { error } = await supabase.from('fb_logs').delete().neq('id', 0);
+                                            if (error) return showToast("Xatolik!");
+                                            setLogs([]);
+                                            showToast("Tarix nolga tushirildi! 🧼");
+                                        }}
+                                        style={{ width: '100%', padding: '20px', borderRadius: 22, border: '1.5px solid rgba(255,100,100,0.3)', background: 'transparent', color: '#FF6464', fontWeight: '1000', fontSize: 14 }}
+                                    >
+                                        TARIXNI (LOGS) TOZALASH
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={async () => {
+                                            if (!confirm("Barcha MAHSULOTLARNI o'chirib yuborasizmi? Ombordagi barcha ma'lumotlar yo'qoladi!")) return;
+                                            const { error } = await supabase.from('fb_products').delete().neq('id', 0);
+                                            if (error) return showToast("Xatolik!");
+                                            setProducts([]);
+                                            showToast("Ombor butunlay tozalandi! 📦");
+                                        }}
+                                        style={{ width: '100%', padding: '20px', borderRadius: 22, border: 'none', background: '#FF6464', color: '#000', fontWeight: '1000', fontSize: 14, boxShadow: '0 10px 20px rgba(255,100,100,0.2)' }}
+                                    >
+                                        OMBORNI (PRODUCTS) TOZALASH
+                                    </motion.button>
+                                </div>
                             </div>
                         </div>
 
-                        <div style={{ padding: 20, textAlign: 'center', opacity: 0.3, fontSize: 10, fontWeight: '1000', letterSpacing: 2 }}>
-                            FAROBIY MARKET • LUXURY MANAGEMENT SYSTEM
+                        <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
+                            FAROBIY MARKET • v4.34
                         </div>
                     </motion.div>
                 )}
@@ -1032,6 +978,41 @@ export default function App() {
                         )}
                     </motion.div>
                 )}
+
+                {tab === 'history' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+                            <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Tarix</h2>
+                            <div style={{ width: 45, height: 45, borderRadius: 15, background: `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.accent }}>
+                                <History size={24} />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {logs.length === 0 && <div style={{ textAlign: 'center', padding: 50, opacity: 0.4 }}>Tarix bo'sh 🍃</div>}
+                            {logs.slice(0, 100).map(l => (
+                                <div key={l.id} style={{ background: T.card, padding: 20, borderRadius: 28, border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
+                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: l.type === 'SAVDO' ? '#10B98115' : l.type === 'EXPENSE' ? '#FF646415' : `${T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {l.type === 'SAVDO' ? <TrendingUp size={18} color="#10B981" /> : l.type === 'EXPENSE' ? <ArrowDownLeft size={18} color="#FF6464" /> : <Package size={18} color={T.accent} />}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: '800', fontSize: 15 }}>{l.name}</div>
+                                            <div style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>{new Date(l.date || l.created_at).toLocaleString('uz-UZ')}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontWeight: '1000', fontSize: 16, color: l.type === 'SAVDO' ? '#10B981' : l.type === 'EXPENSE' ? '#FF6464' : T.accent }}>
+                                            {l.type === 'EXPENSE' ? '-' : '+'}{Number(l.amount || 0).toLocaleString()}
+                                        </div>
+                                        <div style={{ fontSize: 9, opacity: 0.3, fontWeight: '900', marginTop: 2 }}>{l.type}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+                <div style={{ height: 100 }} />
             </div>
 
             {/* DOCK NAV */}
