@@ -152,6 +152,16 @@ export default function App() {
         }
     }, [isAuthenticated, isSuperAdmin]);
 
+    const trialDaysLeft = useMemo(() => {
+        if (!currentShop || currentShop.id === 0 || isSuperAdmin) return null;
+        const created = new Date(currentShop.created_at || new Date());
+        const expires = new Date(created);
+        expires.setDate(created.getDate() + 30);
+        const diff = expires - new Date();
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        return days > 0 ? days : 0;
+    }, [currentShop, isSuperAdmin]);
+
     const groupedProducts = useMemo(() => {
         let filtered = products;
         if (selectedCat !== 'Hammasi') {
@@ -721,6 +731,24 @@ export default function App() {
             <div style={{ padding: '0 25px' }}>
                 {tab === 'dashboard' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        {trialDaysLeft !== null && (
+                            <motion.div
+                                initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                                style={{ background: trialDaysLeft < 5 ? '#FF646420' : `${T.accent}15`, border: `1px solid ${trialDaysLeft < 5 ? '#FF646440' : T.accent + '30'}`, borderRadius: 24, padding: '15px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <Clock size={18} color={trialDaysLeft < 5 ? '#FF6464' : T.accent} />
+                                    <div>
+                                        <div style={{ fontSize: 11, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.text }}>SINOV MUDDATI (FREE TRIAL)</div>
+                                        <div style={{ fontSize: 10, opacity: 0.6, fontWeight: '700' }}>Bepul foydalanish tugashiga</div>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: 18, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.accent }}>{trialDaysLeft} kun</div>
+                                    <div style={{ fontSize: 9, fontWeight: '900', opacity: 0.4 }}>QOLDI</div>
+                                </div>
+                            </motion.div>
+                        )}
                         <div style={{ background: T.card, padding: 35, borderRadius: 36, marginBottom: 25, boxShadow: `0 30px 60px ${T.shadow}`, border: `1px solid ${T.border}`, position: 'relative', overflow: 'hidden' }}>
                             <div style={{ position: 'absolute', top: 0, right: 0, padding: '15px 20px', background: `${T.accent}10`, borderRadius: '0 0 0 24px', fontSize: 10, fontWeight: '1000', color: T.accent }}>{stats.daily.kirimCount} KIRIM BUGUN</div>
                             <div style={{ fontSize: 10, fontWeight: '900', opacity: 0.4, letterSpacing: 2, marginBottom: 10 }}>BUGUNGI SAVDO</div>
@@ -1518,6 +1546,56 @@ export default function App() {
                         </motion.div>
                     )
                 })()}
+
+                {tab === 'settings' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <div style={{ background: T.card, padding: '25px', borderRadius: 36, border: `1px solid ${T.accent}30`, marginBottom: 30, display: 'flex', alignItems: 'center', gap: 15 }}>
+                            <div style={{ width: 60, height: 60, borderRadius: 20, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Settings size={28} color={T.accent} />
+                            </div>
+                            <div>
+                                <h2 style={{ margin: 0, fontSize: 24, fontWeight: '900' }}>Sozlamalar</h2>
+                                <div style={{ fontSize: 12, opacity: 0.5, fontWeight: '700' }}>Tizim boshqaruvi va Litsenziya</div>
+                            </div>
+                        </div>
+
+                        {trialDaysLeft !== null && (
+                            <div style={{ background: T.card, padding: 30, borderRadius: 36, border: `2px solid ${trialDaysLeft < 5 ? '#FF6464' : T.accent}40`, marginBottom: 30, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: trialDaysLeft < 5 ? '#FF6464' : T.accent }} />
+                                <div style={{ fontSize: 10, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.accent, letterSpacing: 2, marginBottom: 10 }}>SINOV / LITSENZIYA QOLDIG'I</div>
+                                <div style={{ fontSize: 48, fontWeight: '1000', color: trialDaysLeft < 5 ? '#FF6464' : T.text, lineHeight: 1 }}>
+                                    {trialDaysLeft} <span style={{ fontSize: 16, opacity: 0.5 }}>KUN</span>
+                                </div>
+                                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 10, maxWidth: 250, margin: '10px auto 0' }}>
+                                    {trialDaysLeft === 0 ? "Litsenziya muddati tugadi! Tizimdan foydalanish uchun to'lov qiling." : "Oy tugaguncha bepul ishlatishingiz mumkin. KUNLAR QOLGANIDA TARIF SOTIB OLISHNI UNUTMANG."}
+                                </div>
+                            </div>
+                        )}
+
+                        <h3 style={{ fontSize: 16, fontWeight: '900', marginBottom: 15, paddingLeft: 10 }}>Tariflar (Litsenziya)</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                            {[
+                                { name: 'Odiy', price: 250000, period: '1 Oy', accent: '#BBBBBB' },
+                                { name: 'Premium (Tavsiya)', price: 700000, period: '3 Oy', accent: T.accent, recommended: true },
+                                { name: 'Super Premium', price: 1200000, period: '1 Yil', accent: '#00D4FF' }
+                            ].map((p, i) => (
+                                <motion.div key={i} whileHover={{ scale: 1.02 }} style={{ background: T.card, border: p.recommended ? `2px solid ${p.accent}` : `1px solid ${T.border}`, padding: 25, borderRadius: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontSize: 12, fontWeight: '1000', color: p.accent }}>{p.name}</div>
+                                        <div style={{ fontSize: 22, fontWeight: '1000', marginTop: 4 }}>{p.price.toLocaleString()} <small style={{ fontSize: 10, opacity: 0.4 }}>SOM / {p.period}</small></div>
+                                    </div>
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => showToast("Admin bilan bog'laning: 8600 1234 5678 9012")}
+                                        style={{ padding: '12px 20px', borderRadius: 16, background: p.recommended ? p.accent : `${p.accent}20`, color: p.recommended ? '#000' : p.accent, border: 'none', fontWeight: '1000', fontSize: 11 }}
+                                    >
+                                        OLISH
+                                    </motion.button>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
                 <div style={{ height: 100 }} />
             </div>
 
