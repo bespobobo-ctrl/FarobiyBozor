@@ -65,6 +65,8 @@ export default function App() {
     const [cart, setCart] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showPricing, setShowPricing] = useState(false);
+    const [regStep, setRegStep] = useState('login'); // login, plans, payment, pending, register
+    const [selectedPlan, setSelectedPlan] = useState(null);
 
     const [showKirim, setShowKirim] = useState(false);
     const [showSavdo, setShowSavdo] = useState(false);
@@ -518,45 +520,158 @@ export default function App() {
                     </div>
 
                     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '35px 25px', borderRadius: 40, backdropFilter: 'blur(20px)', boxSizing: 'border-box' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                            <div style={{ position: 'relative' }}>
-                                <input value={loginData.user} onChange={e => setLoginData({ ...loginData, user: e.target.value })} placeholder={showSuperLogin ? "SUPER LOGIN" : "LOGIN ID"} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
-                                <User size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-                            </div>
-                            <div style={{ position: 'relative' }}>
-                                <input type="password" value={loginData.pass} onChange={e => setLoginData({ ...loginData, pass: e.target.value })} placeholder="PAROL" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
-                                <Lock size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-                            </div>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                onClick={async () => {
-                                    if (showSuperLogin) {
-                                        if (loginData.user === '123' && loginData.pass === '123') {
-                                            setIsAuthenticated(true); setIsSuperAdmin(true); setCurrentShop(null);
-                                            localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'true'); localStorage.removeItem('fb_shop');
-                                            showToast("Super Admin sessiyasi boshlandi 💎");
-                                        } else { showToast("Admin paroli xato!"); }
-                                    } else {
-                                        if (loginData.user === '111' && loginData.pass === '111') {
-                                            setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop({ id: 0, name: 'Asosiy' });
-                                            localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify({ id: 0, name: 'Asosiy' }));
-                                            showToast("Xavfsiz sessiya boshlandi ⚡");
+                        {regStep === 'login' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                                <div style={{ position: 'relative' }}>
+                                    <input value={loginData.user} onChange={e => setLoginData({ ...loginData, user: e.target.value })} placeholder={showSuperLogin ? "SUPER LOGIN" : "LOGIN ID"} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
+                                    <User size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input type="password" value={loginData.pass} onChange={e => setLoginData({ ...loginData, pass: e.target.value })} placeholder="PAROL" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
+                                    <Lock size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
+                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                    onClick={async () => {
+                                        if (showSuperLogin) {
+                                            if (loginData.user === '123' && loginData.pass === '123') {
+                                                setIsAuthenticated(true); setIsSuperAdmin(true); setCurrentShop(null);
+                                                localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'true'); localStorage.removeItem('fb_shop');
+                                                showToast("Super Admin sessiyasi boshlandi 💎");
+                                            } else { showToast("Admin paroli xato!"); }
                                         } else {
-                                            const { data: s } = await supabase.from('fb_shops').select('*').eq('login', loginData.user).eq('password', loginData.pass).single();
-                                            if (s) {
-                                                if (s.is_blocked) return showToast("Dukoningiz bloklangan! 🛑 Admin bilan bog'laning.");
-                                                setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop(s);
-                                                localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify(s));
-                                                showToast(`${s.name} dukoniga xush kelibsiz! ✨`);
-                                            } else { showToast("Kalit xatosi! ❌"); }
+                                            if (loginData.user === '111' && loginData.pass === '111') {
+                                                setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop({ id: 0, name: 'Asosiy' });
+                                                localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify({ id: 0, name: 'Asosiy' }));
+                                                showToast("Xavfsiz sessiya boshlandi ⚡");
+                                            } else {
+                                                const { data: s } = await supabase.from('fb_shops').select('*').eq('login', loginData.user).eq('password', loginData.pass).single();
+                                                if (s) {
+                                                    if (s.is_blocked) return showToast("Dukoningiz bloklangan! 🛑 Admin bilan bog'laning.");
+                                                    setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop(s);
+                                                    localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify(s));
+                                                    showToast(`${s.name} dukoniga xush kelibsiz! ✨`);
+                                                } else { showToast("Kalit xatosi! ❌"); }
+                                            }
                                         }
-                                    }
-                                }}
-                                style={{ width: '100%', height: 75, background: `linear-gradient(135deg, ${showSuperLogin ? '#FF6464' : T.accent}, ${showSuperLogin ? '#D32F2F' : '#FFBE0B'})`, border: 'none', borderRadius: 24, color: showSuperLogin ? '#fff' : '#000', fontSize: 16, fontWeight: '1000', letterSpacing: 1, boxShadow: `0 20px 40px ${showSuperLogin ? 'rgba(255,100,100,0.2)' : T.accent + '30'}`, cursor: 'pointer', marginTop: 10 }}
-                            >
-                                {showSuperLogin ? 'ADMIN KIRISH' : 'TIZIMGA KIRISH'}
-                            </motion.button>
-                        </div>
+                                    }}
+                                    style={{ width: '100%', height: 75, background: `linear-gradient(135deg, ${showSuperLogin ? '#FF6464' : T.accent}, ${showSuperLogin ? '#D32F2F' : '#FFBE0B'})`, border: 'none', borderRadius: 24, color: showSuperLogin ? '#fff' : '#000', fontSize: 16, fontWeight: '1000', letterSpacing: 1, boxShadow: `0 20px 40px ${showSuperLogin ? 'rgba(255,100,100,0.2)' : T.accent + '30'}`, cursor: 'pointer', marginTop: 10 }}
+                                >
+                                    {showSuperLogin ? 'ADMIN KIRISH' : 'TIZIMGA KIRISH'}
+                                </motion.button>
+                                {!showSuperLogin && (
+                                    <div style={{ textAlign: 'center', marginTop: 20 }}>
+                                        <div style={{ fontSize: 12, opacity: 0.4, marginBottom: 15 }}>Yangi foydalanuvchimisiz?</div>
+                                        <motion.button
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => setRegStep('plans')}
+                                            style={{ background: 'transparent', border: `1px solid ${T.accent}40`, color: T.accent, padding: '15px 30px', borderRadius: 20, fontSize: 13, fontWeight: '1000', cursor: 'pointer' }}
+                                        >
+                                            RO'YXATDAN O'TISH ✨
+                                        </motion.button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {regStep === 'plans' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                                <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 10, textAlign: 'center' }}>TARIFNI TANLANG</div>
+                                {[
+                                    { name: 'Odiy', price: 250000, period: '1 Oy', accent: '#BBBBBB' },
+                                    { name: 'Premium', price: 700000, period: '3 Oy', accent: T.accent, recommended: true },
+                                    { name: 'Super Premium', price: 1200000, period: '1 Yil', accent: '#00D4FF' }
+                                ].map((p, i) => (
+                                    <motion.div
+                                        key={i} whileTap={{ scale: 0.98 }}
+                                        onClick={() => { setSelectedPlan(p); setRegStep('payment'); }}
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: p.recommended ? `2px solid ${p.accent}` : '1px solid rgba(255,255,255,0.08)', padding: 20, borderRadius: 24, position: 'relative' }}
+                                    >
+                                        <div style={{ fontSize: 11, fontWeight: '1000', color: p.accent }}>{p.name}</div>
+                                        <div style={{ fontSize: 24, fontWeight: '1000', marginTop: 5 }}>{p.price.toLocaleString()} <small style={{ fontSize: 10, opacity: 0.4 }}>SOM / {p.period}</small></div>
+                                    </motion.div>
+                                ))}
+                                <div onClick={() => setRegStep('login')} style={{ textAlign: 'center', fontSize: 11, opacity: 0.4, marginTop: 10, cursor: 'pointer' }}>Gadalga qaytish</div>
+                            </div>
+                        )}
+
+                        {regStep === 'payment' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 3 }}>TO'LOV QILING</div>
+                                    <div style={{ fontSize: 20, fontWeight: '1000', marginTop: 10 }}>{selectedPlan?.price.toLocaleString()} SOM</div>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 25, borderRadius: 30, border: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 10 }}>KARTAGA O'TKAZING:</div>
+                                    <div style={{ fontSize: 18, fontWeight: '1000', letterSpacing: 2, color: T.accent }}>8600 1234 5678 9012</div>
+                                    <div style={{ fontSize: 11, fontWeight: '700', marginTop: 5, opacity: 0.6 }}>Farobiy Market Admin</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 15 }}>To'lov chekini (Screenshot) yuklang:</div>
+                                    <input type="file" id="payCheck" style={{ display: 'none' }} onChange={() => setRegStep('pending')} />
+                                    <motion.label
+                                        htmlFor="payCheck"
+                                        whileTap={{ scale: 0.95 }}
+                                        style={{ display: 'block', background: T.accent, color: '#000', padding: '20px', borderRadius: 24, fontWeight: '1000', fontSize: 14, cursor: 'pointer' }}
+                                    >
+                                        UPLOAD SCREENSHOT 📸
+                                    </motion.label>
+                                </div>
+                            </div>
+                        )}
+
+                        {regStep === 'pending' && (
+                            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                <motion.div animate={{ scale: [1, 1.2, 1], rotate: 360 }} transition={{ duration: 3, repeat: Infinity }} style={{ width: 80, height: 80, borderRadius: 40, border: `3px dashed ${T.accent}`, margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <RefreshCw size={35} color={T.accent} />
+                                </motion.div>
+                                <h3 style={{ fontSize: 22, fontWeight: '1000', margin: 0 }}>Tasdiqlanmoqda...</h3>
+                                <p style={{ fontSize: 12, opacity: 0.5, marginTop: 15, lineHeight: 1.6 }}>Sizning to'lovingiz admin tomonidan tekshirilmoqda. Tasdiqlangach registratsiya oynasi ochiladi.</p>
+                                <motion.button
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => setRegStep('register')}
+                                    style={{ marginTop: 30, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.accent, fontSize: 11, fontWeight: '1000', cursor: 'pointer' }}
+                                >
+                                    (DEBUG: PASS FOR DEMO)
+                                </motion.button>
+                            </div>
+                        )}
+
+                        {regStep === 'register' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                                <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, textAlign: 'center', marginBottom: 10 }}>ACCOUNT YARATISH</div>
+                                <div style={{ position: 'relative' }}>
+                                    <input id="regName" placeholder="DUKON NOMI" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px 20px 18px 50px', borderRadius: 20, color: '#fff', fontSize: 14, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
+                                    <ShoppingBag size={16} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input id="regLogin" placeholder="YANGI LOGIN" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px 20px 18px 50px', borderRadius: 20, color: '#fff', fontSize: 14, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
+                                    <User size={16} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input id="regPass" type="password" placeholder="YANGI PAROL" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px 20px 18px 50px', borderRadius: 20, color: '#fff', fontSize: 14, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
+                                    <Lock size={16} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
+                                </div>
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={async () => {
+                                        const n = document.getElementById('regName').value;
+                                        const l = document.getElementById('regLogin').value;
+                                        const p = document.getElementById('regPass').value;
+                                        if (!n || !l || !p) return showToast("Hamma maydonlarni to'ldiring!");
+
+                                        const { data, error } = await supabase.from('fb_shops').insert([{ name: n, login: l, password: p, is_blocked: false }]).select().single();
+                                        if (error) return showToast("Xatolik: " + error.message);
+
+                                        showToast("Tabriklaymiz! Endi kirishingiz mumkin. 🚀");
+                                        setRegStep('login');
+                                    }}
+                                    style={{ width: '100%', height: 65, background: T.accent, color: '#000', border: 'none', borderRadius: 20, fontSize: 15, fontWeight: '1000', marginTop: 10 }}
+                                >
+                                    RUXSAT OLISH ✅
+                                </motion.button>
+                            </div>
+                        )}
                     </div>
                 </motion.div>
             </div>
