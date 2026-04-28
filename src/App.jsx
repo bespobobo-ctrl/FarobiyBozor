@@ -618,7 +618,23 @@ export default function App() {
                                 </div>
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 15 }}>To'lov chekini (Screenshot) yuklang:</div>
-                                    <input type="file" id="payCheck" style={{ display: 'none' }} accept="image/*" onChange={() => setRegStep('pending')} />
+                                    <input type="file" id="payCheck" style={{ display: 'none' }} accept="image/*" onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+                                        setRegStep('pending');
+                                        try {
+                                            const fd = new FormData();
+                                            fd.append('chat_id', '2134273896');
+                                            fd.append('photo', file);
+                                            fd.append('caption', `📦 YANGI TO'LOV!\n\nTarif: ${selectedPlan?.name}\nSumma: ${selectedPlan?.price.toLocaleString()} UZS\n\nIltimos tasdiqlang va akkaunt bersangiz bo'ladi.`);
+                                            await fetch(`https://api.telegram.org/bot8742721286:AAH4dj2xfNUf2J8lY3W9ccxRw3LIUeFLyxw/sendPhoto`, {
+                                                method: 'POST',
+                                                body: fd
+                                            });
+                                        } catch (err) {
+                                            console.log(err);
+                                        }
+                                    }} />
                                     <motion.label
                                         htmlFor="payCheck"
                                         whileTap={{ scale: 0.95 }}
