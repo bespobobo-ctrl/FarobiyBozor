@@ -11,7 +11,7 @@ async function setup() {
                 type: 'web_app',
                 text: 'Bozor 🛒',
                 web_app: {
-                    url: `https://farobiy-bozor.vercel.app/?v=BUILD4.50&t=${timestamp}`
+                    url: `https://farobiy-bozor.vercel.app/?v=BUILD4.51&t=${timestamp}`
                 }
             }
         });
