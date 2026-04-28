@@ -437,7 +437,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 32, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.43 PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.44 PRO</span>
             </motion.div>
 
             {/* RICH MESH GRADIENT SYSTEM */}
@@ -477,7 +477,7 @@ export default function App() {
                 </div>
             </div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 420, margin: '0 auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto' }}>
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
                     {/* LOGO */}
                     <div style={{ marginBottom: 50, textAlign: 'center' }}>
@@ -492,17 +492,17 @@ export default function App() {
                             </div>
                         </div>
                         <h1 style={{ fontSize: 42, fontWeight: '1000', margin: '30px 0 5px', letterSpacing: -2, background: 'linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Farobiy Market</h1>
-                        <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 8, color: T.accent, opacity: 0.8 }}>SYSTEM AUTHENTICATION</div>
+                        <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 8, color: T.accent, opacity: 0.8 }}>TIZIMGA KIRISH</div>
                     </div>
 
                     {/* GLASS CONTAINER FOR FORM */}
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: 30, borderRadius: 40, backdropFilter: 'blur(20px)', boxShadow: '0 40px 80px rgba(0,0,0,0.5)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '35px 20px', borderRadius: 40, backdropFilter: 'blur(20px)', boxShadow: '0 40px 80px rgba(0,0,0,0.5)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                             <div style={{ position: 'relative' }}>
                                 <input
                                     value={loginData.user}
                                     onChange={e => setLoginData({ ...loginData, user: e.target.value })}
-                                    placeholder="Manager ID"
+                                    placeholder="LOGIN ID"
                                     style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.4s' }}
                                 />
                                 <User size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
@@ -513,7 +513,7 @@ export default function App() {
                                     type="password"
                                     value={loginData.pass}
                                     onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
-                                    placeholder="Access Key"
+                                    placeholder="MAXFIY KALIT"
                                     style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.4s' }}
                                 />
                                 <Lock size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
@@ -546,7 +546,7 @@ export default function App() {
                                     marginTop: 10
                                 }}
                             >
-                                KIRISH
+                                TIZIMGA KIRISH
                             </motion.button>
                         </div>
                     </div>
@@ -555,7 +555,7 @@ export default function App() {
 
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
                 <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>
-                    FAROBIY MARKET • v4.43 • 2026
+                    FAROBIY MARKET • v4.44 • 2026
                 </div>
             </div>
         </div>
@@ -572,7 +572,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.41 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.44 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
