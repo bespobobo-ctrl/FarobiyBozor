@@ -16,6 +16,27 @@ import { supabase } from './lib/supabase';
 const numericSizes = ['38', '39', '40', '41', '42', '43', '44', '45', '46'];
 const letterSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
+const SectionCard = ({ icon, title, children, accent }) => (
+    <div style={{ background: 'var(--card)', padding: 25, borderRadius: 32, border: '1px solid var(--border)', boxShadow: '0 20px 40px var(--shadow)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: accent || '#E5B95F' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ color: accent || '#E5B95F' }}>{icon}</div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: '1000', letterSpacing: -0.5 }}>{title}</h3>
+        </div>
+        {children}
+    </div>
+);
+
+const ProfileInput = ({ id, label, val, placeholder, type = "text", T, full = false }) => (
+    <div style={{ width: full ? '100%' : 'auto' }}>
+        <div style={{ fontSize: 9, fontWeight: '1000', opacity: 0.4, marginBottom: 8, letterSpacing: 1.5, marginLeft: 5 }}>{label.toUpperCase()}</div>
+        <input
+            id={id} defaultValue={val} type={type} placeholder={placeholder}
+            style={{ width: '100%', background: T.input, border: `1px solid ${T.border}`, padding: '18px 20px', borderRadius: 20, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box', fontSize: 14 }}
+        />
+    </div>
+);
+
 const AnimatedNumber = ({ value }) => {
     const [displayValue, setDisplayValue] = useState(0);
     useEffect(() => {
@@ -466,7 +487,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.59 PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.60 ELITE PRO</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -545,7 +566,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY MARKET'}</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.59 PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.60</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -619,227 +640,167 @@ export default function App() {
                 )}
 
                 {tab === 'settings' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: '0 5px' }}>
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ padding: '0 5px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 35 }}>
-                            <div style={{ width: 60, height: 60, borderRadius: 22, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: `0 15px 35px ${T.accent}30` }}>
+                            <div style={{ width: 60, height: 60, borderRadius: 22, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.accent, border: `1px solid ${T.border}` }}>
                                 <Settings size={28} />
                             </div>
-                            <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0 }}>Sozlamalar</h2>
+                            <div>
+                                <h2 style={{ fontSize: 32, fontWeight: '1000', margin: 0, letterSpacing: -1.5 }}>Sozlamalar</h2>
+                                <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, opacity: 0.6, letterSpacing: 2 }}>TIZIM KONFIGURATSIYASI</div>
+                            </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 25 }}>
-                            {/* SHOP PROFILE - FOR NORMAL SHOP USERS */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            {/* SECTION: PROFILE */}
                             {!isSuperAdmin && currentShop?.id !== 0 && (
-                                <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.accent}40`, boxShadow: `0 20px 40px ${T.shadow}` }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <User size={20} color={T.accent} />
-                                        </div>
-                                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Dukon Profili</h3>
+                                <SectionCard icon={<User size={18} />} title="Dukon Profili" accent={T.accent}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 15 }}>
+                                        <ProfileInput id="profName" label="Dukon Nomi" val={currentShop?.name} placeholder="Nomi" T={T} />
+                                        <ProfileInput id="profPhone" label="Telefon" val={currentShop?.phone} placeholder="+998..." T={T} />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                        <div style={{ fontSize: 11, fontWeight: '800', opacity: 0.5 }}>Dukon nomi & Telefon</div>
-                                        <div style={{ display: 'flex', gap: 10 }}>
-                                            <input id="profName" defaultValue={currentShop?.name} placeholder="Dukon nomi" style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
-                                            <input id="profPhone" defaultValue={currentShop?.phone} placeholder="Tel: +998..." style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
-                                        </div>
-                                        <div style={{ fontSize: 11, fontWeight: '800', opacity: 0.5, marginTop: 10 }}>Login & Maxfiy Parol</div>
-                                        <div style={{ display: 'flex', gap: 10 }}>
-                                            <input id="profLogin" defaultValue={currentShop?.login} placeholder="Login" style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
-                                            <input id="profPass" defaultValue={currentShop?.password} placeholder="Parol" style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
-                                        </div>
-                                        <div style={{ fontSize: 11, fontWeight: '800', opacity: 0.5, marginTop: 10 }}>Dashboard Sarlavhasi (Boshqaruv o'rniga)</div>
-                                        <input id="profTitle" defaultValue={currentShop?.dashboard_title} placeholder="Masalan: Abror aka Ombori" style={{ width: '100%', background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 15 }}>
+                                        <ProfileInput id="profLogin" label="Login" val={currentShop?.login} placeholder="user123" T={T} />
+                                        <ProfileInput id="profPass" label="Parol" val={currentShop?.password} placeholder="****" type="password" T={T} />
+                                    </div>
+                                    <ProfileInput id="profTitle" label="Dashboard Sarlavhasi (Custom Title)" val={currentShop?.dashboard_title} placeholder="Masalan: Abror aka Ombori" T={T} full />
 
-                                        <motion.button
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={async () => {
-                                                const u = {
-                                                    name: document.getElementById('profName').value,
-                                                    phone: document.getElementById('profPhone').value,
-                                                    login: document.getElementById('profLogin').value,
-                                                    password: document.getElementById('profPass').value,
-                                                    dashboard_title: document.getElementById('profTitle').value
-                                                };
-                                                const { error } = await supabase.from('fb_shops').update(u).eq('id', currentShop.id);
-                                                if (error) return showToast("Xatolik! " + error.message);
-                                                const final = { ...currentShop, ...u };
-                                                setCurrentShop(final);
-                                                localStorage.setItem('fb_shop', JSON.stringify(final));
-                                                showToast("Profil muvaffaqiyatli yangilandi! ✨");
-                                            }}
-                                            style={{ marginTop: 10, padding: '18px', borderRadius: 22, background: T.accent, color: '#000', border: 'none', fontWeight: '1000' }}
-                                        >
-                                            O'zgarishlarni Saqlash
-                                        </motion.button>
-                                    </div>
-                                </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                                        onClick={async () => {
+                                            const u = {
+                                                name: document.getElementById('profName').value,
+                                                phone: document.getElementById('profPhone').value,
+                                                login: document.getElementById('profLogin').value,
+                                                password: document.getElementById('profPass').value,
+                                                dashboard_title: document.getElementById('profTitle').value
+                                            };
+                                            const { error } = await supabase.from('fb_shops').update(u).eq('id', currentShop.id);
+                                            if (error) return showToast("Xatolik! " + error.message);
+                                            const final = { ...currentShop, ...u };
+                                            setCurrentShop(final);
+                                            localStorage.setItem('fb_shop', JSON.stringify(final));
+                                            showToast("Profil saqlandi! ✨");
+                                        }}
+                                        style={{ marginTop: 20, width: '100%', padding: '20px', borderRadius: 20, background: T.accent, color: '#000', border: 'none', fontWeight: '1000', fontSize: 15, boxShadow: `0 15px 30px ${T.accent}30` }}
+                                    >
+                                        O'zgarishlarni Saqlash
+                                    </motion.button>
+                                </SectionCard>
                             )}
 
-                            {/* SHOP MANAGEMENT - SUPER ADMIN ONLY */}
+                            {/* SECTION: SHOP MANAGEMENT (ADMIN) */}
                             {isSuperAdmin && (
-                                <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.accent}30`, boxShadow: `0 20px 40px ${T.shadow}` }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <ShoppingBag size={20} color={T.accent} />
-                                        </div>
-                                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Dukonlarni boshqarish (Admin)</h3>
-                                    </div>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 25 }}>
-                                        <input
-                                            id="shopName" placeholder="Dukon nomi"
-                                            style={{ background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }}
-                                        />
-                                        <div style={{ display: 'flex', gap: 10 }}>
-                                            <input id="shopLogin" placeholder="Login" style={{ flex: 1, minWidth: 0, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
-                                            <input id="shopPass" placeholder="Parol" style={{ flex: 1, minWidth: 0, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                <SectionCard icon={<ShoppingBag size={18} />} title="Dukonlarni Boshqarish" accent="#FFC107">
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                                        <ProfileInput id="shopName" label="Yangi do'kon nomi" T={T} full />
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                            <ProfileInput id="shopLogin" label="Login" T={T} />
+                                            <ProfileInput id="shopPass" label="Parol" T={T} />
                                         </div>
                                         <motion.button
                                             whileTap={{ scale: 0.98 }}
                                             onClick={async () => {
-                                                const nameEl = document.getElementById('shopName');
-                                                const loginEl = document.getElementById('shopLogin');
-                                                const passEl = document.getElementById('shopPass');
-                                                const name = nameEl.value;
-                                                const login = loginEl.value;
-                                                const pass = passEl.value;
-                                                if (!name || !login || !pass) return showToast("Barcha maydonlarni to'ldiring!");
-                                                const { error } = await supabase.from('fb_shops').insert([{ name, login, password: pass }]);
+                                                const nE = document.getElementById('shopName'), lE = document.getElementById('shopLogin'), pE = document.getElementById('shopPass');
+                                                if (!nE.value || !lE.value || !pE.value) return showToast("To'ldiring!");
+                                                const { error } = await supabase.from('fb_shops').insert([{ name: nE.value, login: lE.value, password: pE.value }]);
                                                 if (error) return showToast("Xatolik: " + error.message);
-                                                showToast("Dukon muvaffaqiyatli qo'shildi! ✨");
-                                                nameEl.value = ''; loginEl.value = ''; passEl.value = '';
-                                                const { data } = await supabase.from('fb_shops').select('*');
-                                                if (data) setShops(data);
+                                                showToast("Dukon qo'shildi! ✨");
+                                                nE.value = lE.value = pE.value = '';
+                                                const { data } = await supabase.from('fb_shops').select('*'); if (data) setShops(data);
                                             }}
-                                            style={{ padding: '18px', borderRadius: 22, background: T.accent, color: '#000', border: 'none', fontWeight: '1000' }}
+                                            style={{ padding: '18px', borderRadius: 20, background: T.text, color: T.card, border: 'none', fontWeight: '1000', marginTop: 10 }}
                                         >
-                                            Yangi Dukon Qo'shish
+                                            Qo'shish
                                         </motion.button>
                                     </div>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 200, overflowY: 'auto', paddingRight: 5 }}>
                                         {shops.map(s => (
-                                            <div key={s.id} style={{ padding: '15px 20px', borderRadius: 20, background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div key={s.id} style={{ padding: '15px', borderRadius: 18, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <div>
-                                                    <div style={{ fontWeight: '900', fontSize: 15 }}>{s.name}</div>
-                                                    <div style={{ fontSize: 10, opacity: 0.5 }}>Login: {s.login} | ID: {s.id}</div>
+                                                    <div style={{ fontWeight: '900', fontSize: 14 }}>{s.name}</div>
+                                                    <div style={{ fontSize: 9, opacity: 0.5 }}>ID: {s.id} | {s.login}</div>
                                                 </div>
                                                 <Trash2 size={16} color="#FF6464" style={{ cursor: 'pointer' }} onClick={async () => {
-                                                    if (!confirm("Ushbu dukonni o'chirasizmi?")) return;
+                                                    if (!confirm("O'chirasizmi?")) return;
                                                     await supabase.from('fb_shops').delete().eq('id', s.id);
                                                     setShops(shops.filter(x => x.id !== s.id));
-                                                    showToast("O'chirildi!");
                                                 }} />
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </SectionCard>
                             )}
-                            <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.border}`, boxShadow: `0 20px 40px ${T.shadow}` }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Kategoriyalar</h3>
-                                </div>
+                            {/* SECTION: CATEGORIES */}
+                            <SectionCard icon={<Layers size={18} />} title="Mahsulot Turkumlari" accent={T.accent}>
                                 <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                                    <input
-                                        value={newCat}
-                                        onChange={e => setNewCat(e.target.value)}
-                                        placeholder="Yangi turkum..."
-                                        style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }}
-                                    />
-                                    <motion.button
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={async () => {
-                                            if (!newCat.trim()) return;
-                                            const { error } = await supabase.from('fb_categories').insert([{ name: newCat.trim(), shop_id: currentShop?.id || 0 }]);
-                                            if (error) return showToast("Xatolik");
-                                            setCategories([...categories, newCat.trim()]);
-                                            setNewCat('');
-                                            showToast("Qo'shildi! ✅");
-                                        }}
-                                        style={{ width: 55, height: 55, borderRadius: 18, background: T.accent, color: '#000', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    >
-                                        <Plus size={24} />
-                                    </motion.button>
+                                    <input value={newCat} onChange={e => setNewCat(e.target.value)} placeholder="Yangi turkum..." style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                    <motion.button whileTap={{ scale: 0.9 }} onClick={async () => {
+                                        if (!newCat.trim()) return;
+                                        const { error } = await supabase.from('fb_categories').insert([{ name: newCat.trim(), shop_id: currentShop?.id || 0 }]);
+                                        if (error) return; setCategories([...categories, newCat.trim()]); setNewCat('');
+                                    }} style={{ width: 55, height: 55, borderRadius: 18, background: T.accent, color: '#000', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={24} /></motion.button>
                                 </div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                     {categories.map(c => (
                                         <div key={c} style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', padding: '10px 18px', borderRadius: 15, border: `1px dashed ${T.border}`, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: '800' }}>
-                                            {c}
-                                            <Trash2 size={14} color="#FF6464" style={{ cursor: 'pointer' }} onClick={async () => {
-                                                if (!confirm("O'chirilsinmi?")) return;
-                                                await supabase.from('fb_categories').delete().eq('name', c);
-                                                setCategories(categories.filter(x => x !== c));
+                                            {c} <Trash2 size={14} color="#FF6464" style={{ cursor: 'pointer' }} onClick={async () => {
+                                                if (!confirm("O'chirilsinmi?")) return; await supabase.from('fb_categories').delete().eq('name', c); setCategories(categories.filter(x => x !== c));
                                             }} />
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </SectionCard>
 
-                            {/* DATA MANAGEMENT - DANGER ZONE */}
-                            <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid rgba(255,100,100,0.2)`, boxShadow: `0 20px 40px ${T.shadow}` }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                    <div style={{ width: 35, height: 35, borderRadius: 10, background: 'rgba(255,100,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <AlertTriangle size={18} color="#FF6464" />
+                            {/* SECTION: DANGER ZONE (ADMIN) */}
+                            {isSuperAdmin && (
+                                <SectionCard icon={<AlertTriangle size={18} />} title="Xavfli Hudud" accent="#FF6464">
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={async () => {
+                                                const code = prompt("Kod:"); if (code !== '111') return;
+                                                if (confirm("TARIXNI tozalash?")) {
+                                                    await supabase.from('fb_logs').delete().neq('id', 0);
+                                                    setLogs([]); showToast("Tozalandi! 🧼");
+                                                }
+                                            }}
+                                            style={{ width: '100%', padding: '18px', borderRadius: 20, border: '1.5px solid rgba(255,100,100,0.3)', background: 'transparent', color: '#FF6464', fontWeight: '1000', fontSize: 13 }}
+                                        >
+                                            TARIXNI TOZALASH
+                                        </motion.button>
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={async () => {
+                                                const code = prompt("Kod:"); if (code !== '111') return;
+                                                if (confirm("OMBORNI tozalash?")) {
+                                                    await supabase.from('fb_products').delete().neq('id', 0);
+                                                    setProducts([]); showToast("Tozalandi! 📦");
+                                                }
+                                            }}
+                                            style={{ width: '100%', padding: '18px', borderRadius: 20, background: '#FF6464', color: '#000', border: 'none', fontWeight: '1000', fontSize: 13 }}
+                                        >
+                                            OMBORNI TOZALASH
+                                        </motion.button>
                                     </div>
-                                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900', color: '#FF6464' }}>Ma'lumotlarni boshqarish</h3>
-                                </div>
-                                <p style={{ fontSize: 11, opacity: 0.5, marginBottom: 25, lineHeight: 1.5 }}>
-                                    Eslatma: Ombor tozalanganidan keyin statistika (foyda/harajat) natijalari saqlanib qolishi uchun loglarni (tarix) ham qo'lda tozalash kerak bo'lishi mumkin.
-                                </p>
+                                </SectionCard>
+                            )}
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-                                    <motion.button
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={async () => {
-                                            const code = prompt("O'chirish uchun maxsus kodni kiriting:");
-                                            if (code !== '111') return showToast("Kod noto'g'ri! ❌");
-                                            if (!confirm("Barcha TARIXNI o'chirib, hisobotlarni nolga tushirasizmi? Bu amalni orqaga qaytarib bo'lmaydi!")) return;
-                                            const { error } = await supabase.from('fb_logs').delete().neq('id', 0);
-                                            if (error) return showToast("Xatolik!");
-                                            setLogs([]);
-                                            showToast("Tarix nolga tushirildi! 🧼");
-                                        }}
-                                        style={{ width: '100%', padding: '20px', borderRadius: 22, border: '1.5px solid rgba(255,100,100,0.3)', background: 'transparent', color: '#FF6464', fontWeight: '1000', fontSize: 14 }}
-                                    >
-                                        TARIXNI (LOGS) TOZALASH
-                                    </motion.button>
-
-                                    <motion.button
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={async () => {
-                                            const code = prompt("O'chirish uchun maxsus kodni kiriting:");
-                                            if (code !== '111') return showToast("Kod noto'g'ri! ❌");
-                                            if (!confirm("Barcha MAHSULOTLARNI o'chirib yuborasizmi? Ombordagi barcha ma'lumotlar yo'qoladi!")) return;
-                                            const { error } = await supabase.from('fb_products').delete().neq('id', 0);
-                                            if (error) return showToast("Xatolik!");
-                                            setProducts([]);
-                                            showToast("Ombor butunlay tozalandi! 📦");
-                                        }}
-                                        style={{ width: '100%', padding: '20px', borderRadius: 22, border: 'none', background: '#FF6464', color: '#000', fontWeight: '1000', fontSize: 14, boxShadow: '0 10px 20px rgba(255,100,100,0.2)' }}
-                                    >
-                                        OMBORNI (PRODUCTS) TOZALASH
-                                    </motion.button>
-                                    <motion.button
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            localStorage.clear();
-                                            setIsAuthenticated(false);
-                                            setIsSuperAdmin(false);
-                                            setCurrentShop(null);
-                                            showToast("Tizimdan chiqildi! 👋");
-                                            setShowLoginForm(false);
-                                        }}
-                                        style={{ width: '100%', padding: '18px', borderRadius: 22, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', fontWeight: '1000', fontSize: 13, marginTop: 10 }}
-                                    >
-                                        TIZIMGA QAYTISH (LOGOUT)
-                                    </motion.button>
-                                </div>
+                            {/* SECTION: SYSTEM */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+                                <motion.div onClick={() => setIsDark(!isDark)} whileTap={{ scale: 0.95 }} style={{ background: T.card, padding: 25, borderRadius: 32, border: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer', boxShadow: `0 15px 30px ${T.shadow}` }}>
+                                    {isDark ? <Sun size={24} color={T.accent} /> : <Moon size={24} color={T.accent} />}
+                                    <div style={{ fontSize: 12, fontWeight: '1000' }}>Mavzu: {isDark ? 'YORUG' : 'TUN'}</div>
+                                </motion.div>
+                                <motion.div onClick={() => { setIsAuthenticated(false); localStorage.removeItem('fb_auth'); }} whileTap={{ scale: 0.95 }} style={{ background: T.card, padding: 25, borderRadius: 32, border: `1px solid rgba(255,100,100,0.1)`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer', boxShadow: `0 15px 30px ${T.shadow}` }}>
+                                    <LogOut size={24} color="#FF6464" />
+                                    <div style={{ fontSize: 12, fontWeight: '1000', color: '#FF6464' }}>CHIQISH</div>
+                                </motion.div>
                             </div>
                         </div>
 
-                        <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.41
+                        <div style={{ textAlign: 'center', paddingTop: 40, opacity: 0.2, fontSize: 9, fontWeight: '1000', letterSpacing: 4 }}>
+                            FAROBIY BOUTIQUE ENGINE • 2026
                         </div>
                     </motion.div>
                 )}
