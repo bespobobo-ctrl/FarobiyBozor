@@ -613,12 +613,12 @@ export default function App() {
                                 </div>
                                 <div style={{ background: 'rgba(255,255,255,0.05)', padding: 25, borderRadius: 30, border: '1px solid rgba(255,255,255,0.1)' }}>
                                     <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 10 }}>KARTAGA O'TKAZING:</div>
-                                    <div style={{ fontSize: 18, fontWeight: '1000', letterSpacing: 2, color: T.accent }}>8600 1234 5678 9012</div>
-                                    <div style={{ fontSize: 11, fontWeight: '700', marginTop: 5, opacity: 0.6 }}>Farobiy Market Admin</div>
+                                    <div style={{ fontSize: 18, fontWeight: '1000', letterSpacing: 2, color: T.accent }}>9860 0825 8195 2825</div>
+                                    <div style={{ fontSize: 11, fontWeight: '700', marginTop: 5, opacity: 0.6 }}>Telegram ID orqali tasdiqlash: 2134273896</div>
                                 </div>
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 15 }}>To'lov chekini (Screenshot) yuklang:</div>
-                                    <input type="file" id="payCheck" style={{ display: 'none' }} onChange={() => setRegStep('pending')} />
+                                    <input type="file" id="payCheck" style={{ display: 'none' }} accept="image/*" onChange={() => setRegStep('pending')} />
                                     <motion.label
                                         htmlFor="payCheck"
                                         whileTap={{ scale: 0.95 }}
@@ -626,6 +626,9 @@ export default function App() {
                                     >
                                         UPLOAD SCREENSHOT 📸
                                     </motion.label>
+                                    <div onClick={() => setRegStep('plans')} style={{ textAlign: 'center', fontSize: 11, opacity: 0.4, marginTop: 20, cursor: 'pointer', padding: 10 }}>
+                                        ⬅ Orqaga (Tariflarga qaytish)
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -637,12 +640,16 @@ export default function App() {
                                 </motion.div>
                                 <h3 style={{ fontSize: 22, fontWeight: '1000', margin: 0 }}>Tasdiqlanmoqda...</h3>
                                 <p style={{ fontSize: 12, opacity: 0.5, marginTop: 15, lineHeight: 1.6 }}>Sizning to'lovingiz admin tomonidan tekshirilmoqda. Tasdiqlangach registratsiya oynasi ochiladi.</p>
+                                <p style={{ fontSize: 11, color: T.accent, marginTop: 10 }}>Kechiksa, Admin Telegram ID: 2134273896 ga skrinshotni yuboring.</p>
+                                <div onClick={() => setRegStep('payment')} style={{ textAlign: 'center', fontSize: 11, opacity: 0.4, marginTop: 20, cursor: 'pointer', padding: 10 }}>
+                                    ⬅ Orqaga (Qayta yuklash)
+                                </div>
                                 <motion.button
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => setRegStep('register')}
-                                    style={{ marginTop: 30, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.accent, fontSize: 11, fontWeight: '1000', cursor: 'pointer' }}
+                                    style={{ marginTop: 30, padding: 5, fontSize: 8, opacity: 0.1, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
                                 >
-                                    (DEBUG: PASS FOR DEMO)
+                                    DEBUG: PASS FOR DEMO
                                 </motion.button>
                             </div>
                         )}
@@ -1586,11 +1593,12 @@ export default function App() {
                                     </div>
                                     <motion.button
                                         whileTap={{ scale: 0.9 }}
-                                        onClick={() => showToast("Admin bilan bog'laning: 8600 1234 5678 9012")}
+                                        onClick={() => showToast("Admin bilan bog'laning (ID: 2134273896 / Karta: 9860 0825 8195 2825)")}
                                         style={{ padding: '12px 20px', borderRadius: 16, background: p.recommended ? p.accent : `${p.accent}20`, color: p.recommended ? '#000' : p.accent, border: 'none', fontWeight: '1000', fontSize: 11 }}
                                     >
                                         OLISH
                                     </motion.button>
+
                                 </motion.div>
                             ))}
                         </div>
