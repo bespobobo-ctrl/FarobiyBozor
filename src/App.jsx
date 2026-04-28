@@ -28,6 +28,8 @@ const AnimatedNumber = ({ value }) => {
 export default function App() {
     const [tab, setTab] = useState('dashboard');
     const [msg, setMsg] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('fb_auth') === 'true');
+    const [loginData, setLoginData] = useState({ user: '', pass: '' });
     const [isDark, setIsDark] = useState(() => JSON.parse(localStorage.getItem('fb_theme') || 'false'));
     const [categories, setCategories] = useState(['Premium', 'Sifatli', 'Oyoq kiyim']);
     const [selectedCat, setSelectedCat] = useState('Hammasi');
@@ -426,6 +428,65 @@ export default function App() {
         }
     };
 
+    if (!isAuthenticated) return (
+        <div style={{ minHeight: '100vh', background: '#050508', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 25, fontFamily: "'Outfit', sans-serif" }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: 400 }}>
+                <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                    <motion.div
+                        initial={{ scale: 0 }} animate={{ scale: 1 }}
+                        style={{ width: 80, height: 80, borderRadius: 30, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: `0 20px 50px ${T.accent}40` }}
+                    >
+                        <ShieldCheck size={40} color="#000" />
+                    </motion.div>
+                    <h2 style={{ fontSize: 32, fontWeight: '900', margin: 0, letterSpacing: -1 }}>Xush Kelibsiz</h2>
+                    <p style={{ opacity: 0.5, fontSize: 13, marginTop: 10, fontWeight: '800', letterSpacing: 2 }}>FAROBIY MARKET SYSTEM</p>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: 35, borderRadius: 45, border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(30px)', boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 10 }}>LOGIN</div>
+                        <input
+                            value={loginData.user}
+                            onChange={e => setLoginData({ ...loginData, user: e.target.value })}
+                            placeholder="Kiriting..."
+                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 25px', borderRadius: 22, color: '#fff', fontSize: 16, fontWeight: '800', outline: 'none' }}
+                        />
+                    </div>
+                    <div style={{ marginBottom: 35 }}>
+                        <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 10 }}>PAROL</div>
+                        <input
+                            type="password"
+                            value={loginData.pass}
+                            onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
+                            placeholder="••••••"
+                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 25px', borderRadius: 22, color: '#fff', fontSize: 16, fontWeight: '800', outline: 'none' }}
+                        />
+                    </div>
+
+                    <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                            if (loginData.user === '111' && loginData.pass === '111') {
+                                setIsAuthenticated(true);
+                                localStorage.setItem('fb_auth', 'true');
+                                showToast("Muvaffaqiyatli kirish! 🔓");
+                            } else {
+                                showToast("Identifikatsiya hato! ❌");
+                            }
+                        }}
+                        style={{ width: '100%', height: 75, background: T.accent, border: 'none', borderRadius: 25, color: '#000', fontSize: 16, fontWeight: '1000', boxShadow: `0 15px 30px ${T.accent}30` }}
+                    >
+                        TIZIMGA KIRISH
+                    </motion.button>
+                </div>
+
+                <div style={{ textAlign: 'center', marginTop: 40, opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
+                    VERSION v4.38 BOUTIQUE PRO
+                </div>
+            </motion.div>
+        </div>
+    );
+
     return (
         <div style={{ minHeight: '100vh', background: T.bg, color: T.text, paddingBottom: 120, fontFamily: "'Outfit', sans-serif", transition: '0.4s' }}>
 
@@ -437,7 +498,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.36 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.38 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
@@ -590,12 +651,23 @@ export default function App() {
                                     >
                                         OMBORNI (PRODUCTS) TOZALASH
                                     </motion.button>
+                                    <motion.button
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => {
+                                            localStorage.removeItem('fb_auth');
+                                            setIsAuthenticated(false);
+                                            showToast("Tizimdan chiqildi! 👋");
+                                        }}
+                                        style={{ width: '100%', padding: '18px', borderRadius: 22, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', fontWeight: '1000', fontSize: 13, marginTop: 10 }}
+                                    >
+                                        TIZIMDAN CHIQISH (LOGOUT)
+                                    </motion.button>
                                 </div>
                             </div>
                         </div>
 
                         <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.36
+                            FAROBIY MARKET • v4.38
                         </div>
                     </motion.div>
                 )}
