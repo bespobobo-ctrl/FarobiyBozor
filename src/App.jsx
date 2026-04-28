@@ -552,7 +552,7 @@ export default function App() {
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.55 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.65 • 2026</div>
             </div>
         </div>
     );
