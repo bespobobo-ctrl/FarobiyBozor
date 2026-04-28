@@ -466,7 +466,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.58 PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.59 PRO</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -544,8 +544,8 @@ export default function App() {
                         <Command size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.56 BOUTIQUE PRO</small></h1>
+                        <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY MARKET'}</div>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.59 PRO</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -628,6 +628,54 @@ export default function App() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 25 }}>
+                            {/* SHOP PROFILE - FOR NORMAL SHOP USERS */}
+                            {!isSuperAdmin && currentShop?.id !== 0 && (
+                                <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.accent}40`, boxShadow: `0 20px 40px ${T.shadow}` }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <User size={20} color={T.accent} />
+                                        </div>
+                                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Dukon Profili</h3>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        <div style={{ fontSize: 11, fontWeight: '800', opacity: 0.5 }}>Dukon nomi & Telefon</div>
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            <input id="profName" defaultValue={currentShop?.name} placeholder="Dukon nomi" style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                            <input id="profPhone" defaultValue={currentShop?.phone} placeholder="Tel: +998..." style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                        </div>
+                                        <div style={{ fontSize: 11, fontWeight: '800', opacity: 0.5, marginTop: 10 }}>Login & Maxfiy Parol</div>
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            <input id="profLogin" defaultValue={currentShop?.login} placeholder="Login" style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                            <input id="profPass" defaultValue={currentShop?.password} placeholder="Parol" style={{ flex: 1, background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+                                        </div>
+                                        <div style={{ fontSize: 11, fontWeight: '800', opacity: 0.5, marginTop: 10 }}>Dashboard Sarlavhasi (Boshqaruv o'rniga)</div>
+                                        <input id="profTitle" defaultValue={currentShop?.dashboard_title} placeholder="Masalan: Abror aka Ombori" style={{ width: '100%', background: T.input, border: `1px solid ${T.border}`, padding: '15px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800', boxSizing: 'border-box' }} />
+
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={async () => {
+                                                const u = {
+                                                    name: document.getElementById('profName').value,
+                                                    phone: document.getElementById('profPhone').value,
+                                                    login: document.getElementById('profLogin').value,
+                                                    password: document.getElementById('profPass').value,
+                                                    dashboard_title: document.getElementById('profTitle').value
+                                                };
+                                                const { error } = await supabase.from('fb_shops').update(u).eq('id', currentShop.id);
+                                                if (error) return showToast("Xatolik! " + error.message);
+                                                const final = { ...currentShop, ...u };
+                                                setCurrentShop(final);
+                                                localStorage.setItem('fb_shop', JSON.stringify(final));
+                                                showToast("Profil muvaffaqiyatli yangilandi! ✨");
+                                            }}
+                                            style={{ marginTop: 10, padding: '18px', borderRadius: 22, background: T.accent, color: '#000', border: 'none', fontWeight: '1000' }}
+                                        >
+                                            O'zgarishlarni Saqlash
+                                        </motion.button>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* SHOP MANAGEMENT - SUPER ADMIN ONLY */}
                             {isSuperAdmin && (
                                 <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.accent}30`, boxShadow: `0 20px 40px ${T.shadow}` }}>
