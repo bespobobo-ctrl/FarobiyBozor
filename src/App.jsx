@@ -156,7 +156,16 @@ export default function App() {
         if (!currentShop || currentShop.id === 0 || isSuperAdmin) return null;
         const created = new Date(currentShop.created_at || new Date());
         const expires = new Date(created);
-        expires.setDate(created.getDate() + 30);
+
+        let planDays = 30; // default
+        if (currentShop.dashboard_title) {
+            const parsed = parseInt(currentShop.dashboard_title, 10);
+            if (!isNaN(parsed) && parsed > 0 && parsed <= 365) {
+                planDays = parsed;
+            }
+        }
+
+        expires.setDate(created.getDate() + planDays);
         const diff = expires - new Date();
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
         return days > 0 ? days : 0;
@@ -723,7 +732,13 @@ export default function App() {
                                         const p = document.getElementById('regPass').value;
                                         if (!n || !l || !p) return showToast("Hamma maydonlarni to'ldiring!");
 
-                                        const { data, error } = await supabase.from('fb_shops').insert([{ name: n, login: l, password: p, is_blocked: false }]).select().single();
+                                        let duration = '30';
+                                        if (selectedPlan && selectedPlan.name) {
+                                            if (selectedPlan.name.includes("Premium") && !selectedPlan.name.includes("Super")) duration = '90';
+                                            if (selectedPlan.name.includes("Super Premium")) duration = '365';
+                                        }
+
+                                        const { data, error } = await supabase.from('fb_shops').insert([{ name: n, login: l, password: p, is_blocked: false, dashboard_title: duration }]).select().single();
                                         if (error) return showToast("Xatolik: " + error.message);
 
                                         showToast("Tabriklaymiz! Endi kirishingiz mumkin. 🚀");
