@@ -109,41 +109,72 @@ export default function App() {
     const [sales, setSales] = useState([]);
     const [logs, setLogs] = useState([]);
 
+
+    // --- PROFESSIONAL DATA ISOLATION HELPERS ---
+    const db = (table) => {
+        if (!isAuthenticated) return supabase.from(table); // For auth/registration
+        let query = supabase.from(table);
+        if (!isSuperAdmin) {
+            const sid = currentShop?.id;
+            if (sid === undefined || sid === null) {
+                console.error("CRITICAL: Attempted database access without shop_id!");
+                return query.eq('shop_id', -1); // Block all results
+            }
+            query = query.eq('shop_id', sid);
+        }
+        return query;
+    };
+
+    const logout = () => {
+        if (confirm("Tizimdan chiqmoqchimisiz?")) {
+            localStorage.clear(); // Clear all: auth, theme, shop, etc.
+            setIsAuthenticated(false);
+            setCurrentShop(null);
+            setIsSuperAdmin(false);
+            setProducts([]);
+            setLogs([]);
+            showToast("Sessiya yakunlandi 🔒");
+        }
+    };
+
     useEffect(() => { localStorage.setItem('fb_theme', JSON.stringify(isDark)); }, [isDark]);
+
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 if (!isAuthenticated) return;
 
-                let pQuery = supabase.from('fb_products').select('*');
-                let lQuery = supabase.from('fb_logs').select('*');
-
-                if (!isSuperAdmin) {
-                    const shopId = currentShop?.id || 0;
-                    pQuery = pQuery.eq('shop_id', shopId);
-                    lQuery = lQuery.eq('shop_id', shopId);
-                }
-
-                const { data: p } = await pQuery.order('id', { ascending: false });
+                // Professional Scoping: Use the db() helper to ensure shop_id is always applied
+                const { data: p, error: pErr } = await db('fb_products').select('*').order('id', { ascending: false });
+                if (pErr) throw pErr;
                 if (p) setProducts(p);
 
-                const { data: l } = await lQuery.order('id', { ascending: false });
+                const { data: l, error: lErr } = await db('fb_logs').select('*').order('id', { ascending: false });
+                if (lErr) throw lErr;
                 if (l) setLogs(l);
 
+                // Categories usually global or per shop - here we check if categories exist
+                // Categories extraction: Combined from DB table + existing products to prevent "orphaned" categories
                 const { data: c } = await supabase.from('fb_categories').select('name');
-                if (c && c.length > 0) setCategories(c.map(x => x.name));
+                const dbCats = c ? c.map(x => x.name.trim()) : [];
+                const productCats = p ? [...new Set(p.map(x => (x.category || 'Nomaʼlum').trim()))] : [];
+
+                // Merge and unique
+                const allCats = [...new Set([...dbCats, ...productCats])].filter(Boolean);
+                setCategories(allCats);
 
                 if (isSuperAdmin) {
-                    const { data: s } = await supabase.from('fb_shops').select('*');
+                    const { data: s } = await supabase.from('fb_shops').select('*').order('id', { ascending: false });
                     if (s) setShops(s);
                 }
             } catch (err) {
                 console.error("Fetch error:", err);
+                showToast("Ma'lumot yuklashda xatolik! ⚠️");
             }
         };
         fetchData();
-    }, [isAuthenticated, isSuperAdmin, currentShop]);
+    }, [isAuthenticated, isSuperAdmin, currentShop?.id]);
 
     useEffect(() => {
         if (isAuthenticated && !isSuperAdmin && !localStorage.getItem('fb_pricing_seen')) {
@@ -174,7 +205,10 @@ export default function App() {
     const groupedProducts = useMemo(() => {
         let filtered = products;
         if (selectedCat !== 'Hammasi') {
-            filtered = products.filter(p => p.category === selectedCat);
+            // Professional Level: Case-insensitive, trimmed matching to prevent "missing" items
+            filtered = products.filter(p =>
+                (p.category || '').trim().toLowerCase() === selectedCat.trim().toLowerCase()
+            );
         }
 
         const groups = {};
@@ -200,7 +234,7 @@ export default function App() {
         const totalCategories = categories.length;
         const totalItems = products.length;
         const catStats = categories.map(cat => {
-            const count = products.filter(p => p.category === cat).length;
+            const count = products.filter(p => (p.category || '').trim().toLowerCase() === cat.trim().toLowerCase()).length;
             return { name: cat, count, percent: totalItems > 0 ? (count / totalItems) * 100 : 0 };
         });
         return { totalCategories, totalItems, catStats };
@@ -273,6 +307,9 @@ export default function App() {
         const { name, color, category, pachkaCount, unitPrice, selectedSizes, pachkaCost } = kirimForm;
         if (!name || !pachkaCount || !unitPrice || selectedSizes.length === 0) return showToast("Barcha maydonlarni to'ldiring!");
 
+        const sid = currentShop?.id;
+        if (sid === undefined) return showToast("Sessiya xatosi! Qayta kiring.");
+
         try {
             const numPachka = Number(pachkaCount);
             const newProductsRows = [];
@@ -284,7 +321,7 @@ export default function App() {
                         qty: Number(numPachka),
                         price: Number(unitPrice),
                         buy_price: (Number(pachkaCost) / selectedSizes.length),
-                        shop_id: currentShop?.id || 0
+                        shop_id: sid
                     });
                 });
             } else {
@@ -294,29 +331,32 @@ export default function App() {
                     qty: Number(numPachka),
                     price: Number(unitPrice),
                     buy_price: Number(pachkaCost),
-                    shop_id: currentShop?.id || 0
+                    shop_id: sid
                 });
             }
 
-            const { error: pErr } = await supabase.from('fb_products').insert(newProductsRows);
+            // Professional approach: Direct insert with explicit shop_id
+            const { data: insertedProducts, error: pErr } = await supabase.from('fb_products').insert(newProductsRows).select();
+            if (pErr) throw new Error("Mahsulot: " + pErr.message);
+
+            const totalAmount = kirimForm.type === 'pachka' ? Number(pachkaCost) * numPachka : Number(pachkaCost) * numPachka;
+
             const { error: lErr } = await supabase.from('fb_logs').insert([{
                 type: 'KIRIM',
                 name: name,
                 qty: newProductsRows.length,
-                amount: kirimForm.type === 'pachka' ? Number(pachkaCost) * numPachka : Number(pachkaCost) * numPachka,
-                shop_id: currentShop?.id || 0
+                amount: totalAmount,
+                shop_id: sid
             }]);
+            if (lErr) console.error("Log error (Non-critical):", lErr.message);
 
-            if (pErr) throw new Error("Mahsulot: " + pErr.message);
-            if (lErr) throw new Error("Log: " + lErr.message);
-
-            setProducts([...newProductsRows, ...products]);
+            setProducts([...(insertedProducts || newProductsRows), ...products]);
             setLogs([{
                 id: Date.now(),
                 type: 'KIRIM',
                 name: name,
                 qty: newProductsRows.length,
-                amount: kirimForm.type === 'pachka' ? Number(pachkaCost) * numPachka : Number(pachkaCost) * numPachka,
+                amount: totalAmount,
                 date: new Date()
             }, ...logs]);
 
@@ -328,14 +368,16 @@ export default function App() {
     };
     const deleteLog = async (id) => {
         if (!confirm("O'chirilsinmi?")) return;
-        const { error } = await supabase.from('fb_logs').delete().eq('id', id);
+        // Strict scope: can only delete logs belonging to this shop
+        const { error } = await db('fb_logs').delete().eq('id', id);
         if (error) return showToast("Xatolik!");
         setLogs(logs.filter(l => l.id !== id));
         showToast("O'chirildi!");
     };
 
     const updateExpense = async (id, name, amount) => {
-        const { error } = await supabase.from('fb_logs').update({ name, amount: Number(amount) }).eq('id', id);
+        // Strict scope: can only update expenses belonging to this shop
+        const { error } = await db('fb_logs').update({ name, amount: Number(amount) }).eq('id', id);
         if (error) return showToast("Xatolik!");
         setLogs(logs.map(l => l.id === id ? { ...l, name, amount: Number(amount) } : l));
         setEditingItem(null);
@@ -348,6 +390,9 @@ export default function App() {
         if (cart.qty < 1) return showToast("Zaxira yetarli emas!");
         if (!cart.salePrice || Number(cart.salePrice) <= 0) return showToast("Sotuv narxini kiriting!");
 
+        const sid = currentShop?.id;
+        if (sid === undefined) return showToast("Sessiya xatosi!");
+
         try {
             const finalStatus = cart.paymentStatus || 'paid';
             if (finalStatus === 'debt' && (!cart.customerName || !cart.customerPhone)) {
@@ -357,18 +402,21 @@ export default function App() {
                 ? `${cart.customerName} (${cart.customerPhone})`
                 : (cart.customerName || 'Nomaʼlum');
 
-            const { error: pErr } = await supabase.from('fb_products').update({ qty: cart.qty - 1 }).eq('id', cart.id);
-            const { error: lErr } = await supabase.from('fb_logs').insert([{
+            // Robust multi-tenant update: Ensure we only update product belonging to this shop
+            const { error: pErr } = await db('fb_products').update({ qty: cart.qty - 1 }).eq('id', cart.id);
+
+            const { error: lErr } = await db('fb_logs').insert([{
                 type: 'SAVDO',
                 name: cart.name,
                 qty: 1,
                 amount: Number(cart.salePrice),
                 status: finalStatus,
                 customer: customerInfo,
-                shop_id: currentShop?.id || 0
+                shop_id: sid
             }]);
 
-            if (pErr || lErr) throw new Error("Saqlashda xatolik: " + (pErr?.message || lErr?.message));
+            if (pErr) throw new Error("Ombor yangilashda xatolik: " + pErr.message);
+            if (lErr) console.error("Log error:", lErr.message);
 
             setProducts(products.map(p => p.id === cart.id ? { ...p, qty: p.qty - 1 } : p));
             setLogs([{
@@ -429,16 +477,16 @@ export default function App() {
         const item = products.find(p => p.id === id);
         if (!confirm("Haqiqatdan ham o'chirmoqchimisiz?")) return;
         try {
-            const { error } = await supabase.from('fb_products').delete().eq('id', id);
+            const { error } = await db('fb_products').delete().eq('id', id);
             if (error) throw error;
 
             // Log deletion
-            await supabase.from('fb_logs').insert([{
+            await db('fb_logs').insert([{
                 name: `${item?.name} (${item?.size})`,
                 type: 'DELETE',
                 amount: 0,
                 date: new Date(),
-                shop_id: currentShop?.id || 0
+                shop_id: currentShop?.id
             }]);
 
             setProducts(products.filter(p => p.id !== id));
@@ -474,7 +522,7 @@ export default function App() {
     const handleUpdateProduct = async () => {
         if (!editingItem) return;
         try {
-            const { error } = await supabase.from('fb_products').update({
+            const { error } = await db('fb_products').update({
                 name: editingItem.name,
                 color: editingItem.color,
                 size: editingItem.size,
@@ -487,11 +535,12 @@ export default function App() {
             if (error) throw error;
 
             // Log update
-            await supabase.from('fb_logs').insert([{
+            await db('fb_logs').insert([{
                 name: editingItem.name,
                 type: 'EDIT',
                 amount: 0,
-                date: new Date()
+                date: new Date(),
+                shop_id: currentShop?.id
             }]);
 
             setProducts(products.map(p => p.id === editingItem.id ? { ...editingItem, qty: Number(editingItem.qty), price: Number(editingItem.price), buy_price: Number(editingItem.buy_price || 0) } : p));
@@ -514,11 +563,11 @@ export default function App() {
         <div style={{ minHeight: '100vh', background: '#020205', color: '#fff', display: 'flex', flexDirection: 'column', padding: '0 20px', fontFamily: "'Outfit', sans-serif", position: 'relative', overflow: 'hidden' }}>
 
             <motion.div
-                initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-                style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{ position: 'absolute', bottom: 30, right: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: 10, backdropFilter: 'blur(5px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 6 }}
             >
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.70 ELITE ULTIMATE</span>
+                <div style={{ width: 4, height: 4, borderRadius: '50%', background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
+                <span style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 1.5, opacity: 0.5, color: '#fff' }}>v4.70 ELITE</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -569,6 +618,16 @@ export default function App() {
                                                     if (s.is_blocked) return showToast("Dukoningiz bloklangan! 🛑 Admin bilan bog'laning.");
                                                     setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop(s);
                                                     localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify(s));
+
+                                                    // Ilova (frontend) ga kirganda LOG yozish - Har bir dukon uchun alohida
+                                                    supabase.from('fb_logs').insert([{
+                                                        type: 'LOGIN',
+                                                        name: s.login,
+                                                        amount: 0,
+                                                        date: new Date().toISOString(),
+                                                        shop_id: s.id
+                                                    }]).then(() => { });
+
                                                     showToast(`${s.name} dukoniga xush kelibsiz! ✨`);
                                                 } else { showToast("Kalit xatosi! ❌"); }
                                             }
@@ -728,9 +787,13 @@ export default function App() {
                                     whileTap={{ scale: 0.98 }}
                                     onClick={async () => {
                                         const n = document.getElementById('regName').value;
-                                        const l = document.getElementById('regLogin').value;
+                                        const l = document.getElementById('regLogin').value.trim();
                                         const p = document.getElementById('regPass').value;
                                         if (!n || !l || !p) return showToast("Hamma maydonlarni to'ldiring!");
+
+                                        // Professional Level: Prevent duplicate logins
+                                        const { data: checkLogs } = await supabase.from('fb_shops').select('id').eq('login', l).maybeSingle();
+                                        if (checkLogs) return showToast("Bu login band! Boshqasini tanlang.");
 
                                         let duration = '30';
                                         if (selectedPlan && selectedPlan.name) {
@@ -779,16 +842,7 @@ export default function App() {
                     </motion.div>
                     <motion.div
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => {
-                            if (confirm("Tizimdan chiqmoqchimisiz?")) {
-                                localStorage.removeItem('fb_auth');
-                                localStorage.removeItem('fb_shop');
-                                localStorage.removeItem('fb_is_super');
-                                setIsAuthenticated(false);
-                                setCurrentShop(null);
-                                setIsSuperAdmin(false);
-                            }
-                        }}
+                        onClick={logout}
                         style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}`, color: '#FF6464' }}
                     >
                         <LogOut size={20} />
@@ -958,42 +1012,64 @@ export default function App() {
                                             Qo'shish
                                         </motion.button>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 280, overflowY: 'auto', paddingRight: 5 }}>
-                                        {shops.map(s => (
-                                            <div key={s.id} style={{ padding: '15px', borderRadius: 20, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: s.is_blocked ? '1px solid rgba(255,100,100,0.2)' : `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: s.is_blocked ? 0.7 : 1 }}>
-                                                <div>
-                                                    <div style={{ fontWeight: '900', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        {s.name}
-                                                        {s.is_blocked && <ShieldOff size={12} color="#FF6464" />}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 350, overflowY: 'auto', paddingRight: 5 }}>
+                                        {shops.map(s => {
+                                            const sCreated = new Date(s.created_at || new Date());
+                                            const sExpires = new Date(sCreated);
+                                            let sPlanDays = 30;
+                                            let sPlanName = "ODDIY (1 OY)";
+                                            if (s.dashboard_title) {
+                                                const p = parseInt(s.dashboard_title, 10);
+                                                if (!isNaN(p)) sPlanDays = p;
+                                            }
+                                            if (sPlanDays === 90) sPlanName = "PREMIUM (3 OY)";
+                                            if (sPlanDays === 365) sPlanName = "SUPER PREMIUM (1 YIL)";
+
+                                            sExpires.setDate(sCreated.getDate() + sPlanDays);
+                                            const sDiff = sExpires - new Date();
+                                            const sDaysLeft = sDiff > 0 ? Math.ceil(sDiff / (1000 * 60 * 60 * 24)) : 0;
+
+                                            const shopLogins = logs.filter(l => l.type === 'LOGIN' && l.name === s.login).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                                            const lastLoginStr = shopLogins.length > 0 ? new Date(shopLogins[0].created_at || shopLogins[0].date).toLocaleString('uz-UZ') : "Noma'lum";
+
+                                            return (
+                                                <div key={s.id} style={{ padding: '15px', borderRadius: 20, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: s.is_blocked ? '1px solid rgba(255,100,100,0.2)' : `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: s.is_blocked ? 0.7 : 1 }}>
+                                                    <div>
+                                                        <div style={{ fontWeight: '900', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            {s.name}
+                                                            {s.is_blocked && <ShieldOff size={12} color="#FF6464" />}
+                                                        </div>
+                                                        <div style={{ fontSize: 10, opacity: 0.8, marginTop: 4, fontWeight: '700' }}>Tarif: <span style={{ color: T.accent }}>{sPlanName}</span> • Qoldi: {sDaysLeft} kun</div>
+                                                        <div style={{ fontSize: 9, opacity: 0.4, marginTop: 4 }}>Tizimga oxirgi ulanish: {lastLoginStr}</div>
+                                                        <div style={{ fontSize: 9, opacity: 0.2, marginTop: 2 }}>Login: {s.login}</div>
                                                     </div>
-                                                    <div style={{ fontSize: 9, opacity: 0.5 }}>ID: {s.id} | Login: {s.login}</div>
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditingShop(s)} style={{ width: 35, height: 35, borderRadius: 10, background: `${T.accent}15`, border: 'none', color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit3 size={15} /></motion.button>
+                                                        <motion.button
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={async () => {
+                                                                const { error } = await supabase.from('fb_shops').update({ is_blocked: !s.is_blocked }).eq('id', s.id);
+                                                                if (error) return;
+                                                                setShops(shops.map(x => x.id === s.id ? { ...x, is_blocked: !s.is_blocked } : x));
+                                                                showToast(s.is_blocked ? "🔓 Faollashdi" : "🛑 Bloklandi");
+                                                            }}
+                                                            style={{ width: 35, height: 35, borderRadius: 10, background: s.is_blocked ? 'rgba(16,185,129,0.1)' : 'rgba(255,100,100,0.1)', border: 'none', color: s.is_blocked ? '#10B981' : '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        >
+                                                            {s.is_blocked ? <CheckCircle size={15} /> : <ShieldOff size={15} />}
+                                                        </motion.button>
+                                                        <motion.button
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={async () => {
+                                                                if (!confirm("O'chirilsinmi?")) return;
+                                                                await supabase.from('fb_shops').delete().eq('id', s.id);
+                                                                setShops(shops.filter(x => x.id !== s.id));
+                                                            }}
+                                                            style={{ width: 35, height: 35, borderRadius: 10, background: 'rgba(255,100,100,0.05)', border: 'none', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        ><Trash2 size={15} /></motion.button>
+                                                    </div>
                                                 </div>
-                                                <div style={{ display: 'flex', gap: 8 }}>
-                                                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditingShop(s)} style={{ width: 35, height: 35, borderRadius: 10, background: `${T.accent}15`, border: 'none', color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit3 size={15} /></motion.button>
-                                                    <motion.button
-                                                        whileTap={{ scale: 0.9 }}
-                                                        onClick={async () => {
-                                                            const { error } = await supabase.from('fb_shops').update({ is_blocked: !s.is_blocked }).eq('id', s.id);
-                                                            if (error) return;
-                                                            setShops(shops.map(x => x.id === s.id ? { ...x, is_blocked: !s.is_blocked } : x));
-                                                            showToast(s.is_blocked ? "🔓 Faollashdi" : "🛑 Bloklandi");
-                                                        }}
-                                                        style={{ width: 35, height: 35, borderRadius: 10, background: s.is_blocked ? 'rgba(16,185,129,0.1)' : 'rgba(255,100,100,0.1)', border: 'none', color: s.is_blocked ? '#10B981' : '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                    >
-                                                        {s.is_blocked ? <CheckCircle size={15} /> : <ShieldOff size={15} />}
-                                                    </motion.button>
-                                                    <motion.button
-                                                        whileTap={{ scale: 0.9 }}
-                                                        onClick={async () => {
-                                                            if (!confirm("O'chirilsinmi?")) return;
-                                                            await supabase.from('fb_shops').delete().eq('id', s.id);
-                                                            setShops(shops.filter(x => x.id !== s.id));
-                                                        }}
-                                                        style={{ width: 35, height: 35, borderRadius: 10, background: 'rgba(255,100,100,0.05)', border: 'none', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                    ><Trash2 size={15} /></motion.button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </SectionCard>
                             )}
