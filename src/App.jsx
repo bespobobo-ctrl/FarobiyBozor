@@ -29,7 +29,12 @@ export default function App() {
     const [tab, setTab] = useState('dashboard');
     const [msg, setMsg] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('fb_auth') === 'true');
+    const [isSuperAdmin, setIsSuperAdmin] = useState(() => localStorage.getItem('fb_is_super') === 'true');
+    const [currentShop, setCurrentShop] = useState(() => JSON.parse(localStorage.getItem('fb_shop') || 'null'));
+    const [showSuperLogin, setShowSuperLogin] = useState(false);
     const [loginData, setLoginData] = useState({ user: '', pass: '' });
+    const pressTimer = useRef(null);
+    const [shops, setShops] = useState([]);
     const [isDark, setIsDark] = useState(() => JSON.parse(localStorage.getItem('fb_theme') || 'false'));
     const [categories, setCategories] = useState(['Premium', 'Sifatli', 'Oyoq kiyim']);
     const [selectedCat, setSelectedCat] = useState('Hammasi');
@@ -85,22 +90,34 @@ export default function App() {
             try {
                 if (!isAuthenticated) return;
 
-                const { data: p, error: pErr } = await supabase.from('fb_products').select('*').order('id', { ascending: false });
-                if (pErr) throw pErr;
+                let pQuery = supabase.from('fb_products').select('*');
+                let lQuery = supabase.from('fb_logs').select('*');
+
+                if (!isSuperAdmin) {
+                    const shopId = currentShop?.id || 0;
+                    pQuery = pQuery.eq('shop_id', shopId);
+                    lQuery = lQuery.eq('shop_id', shopId);
+                }
+
+                const { data: p } = await pQuery.order('id', { ascending: false });
                 if (p) setProducts(p);
 
-                const { data: l, error: lErr } = await supabase.from('fb_logs').select('*').order('id', { ascending: false });
-                if (lErr) throw lErr;
+                const { data: l } = await lQuery.order('id', { ascending: false });
                 if (l) setLogs(l);
 
                 const { data: c } = await supabase.from('fb_categories').select('name');
                 if (c && c.length > 0) setCategories(c.map(x => x.name));
+
+                if (isSuperAdmin) {
+                    const { data: s } = await supabase.from('fb_shops').select('*');
+                    if (s) setShops(s);
+                }
             } catch (err) {
                 console.error("Fetch error:", err);
             }
         };
         fetchData();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, isSuperAdmin, currentShop]);
 
     const groupedProducts = useMemo(() => {
         let filtered = products;
@@ -150,7 +167,6 @@ export default function App() {
                 ? new Date(new Date().setHours(0, 0, 0, 0))
                 : new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
 
-            const periodLogs = logs.filter(l => new Date(l.date || l.created_at) >= cutoff);
             const prevCutoff = new Date(cutoff.getTime() - (days * 24 * 60 * 60 * 1000));
             const prevLogs = logs.filter(l => {
                 const d = new Date(l.date || l.created_at);
@@ -214,7 +230,8 @@ export default function App() {
                         name, color, category, size,
                         qty: Number(numPachka),
                         price: Number(unitPrice),
-                        buy_price: (Number(pachkaCost) / selectedSizes.length)
+                        buy_price: (Number(pachkaCost) / selectedSizes.length),
+                        shop_id: currentShop?.id || 0
                     });
                 });
             } else {
@@ -223,7 +240,8 @@ export default function App() {
                     size: selectedSizes[0] || 'N/A',
                     qty: Number(numPachka),
                     price: Number(unitPrice),
-                    buy_price: Number(pachkaCost)
+                    buy_price: Number(pachkaCost),
+                    shop_id: currentShop?.id || 0
                 });
             }
 
@@ -232,7 +250,8 @@ export default function App() {
                 type: 'KIRIM',
                 name: name,
                 qty: newProductsRows.length,
-                amount: kirimForm.type === 'pachka' ? Number(pachkaCost) * numPachka : Number(pachkaCost) * numPachka
+                amount: kirimForm.type === 'pachka' ? Number(pachkaCost) * numPachka : Number(pachkaCost) * numPachka,
+                shop_id: currentShop?.id || 0
             }]);
 
             if (pErr) throw new Error("Mahsulot: " + pErr.message);
@@ -292,7 +311,8 @@ export default function App() {
                 qty: 1,
                 amount: Number(cart.salePrice),
                 status: finalStatus,
-                customer: customerInfo
+                customer: customerInfo,
+                shop_id: currentShop?.id || 0
             }]);
 
             if (pErr || lErr) throw new Error("Saqlashda xatolik: " + (pErr?.message || lErr?.message));
@@ -364,7 +384,8 @@ export default function App() {
                 name: `${item?.name} (${item?.size})`,
                 type: 'DELETE',
                 amount: 0,
-                date: new Date()
+                date: new Date(),
+                shop_id: currentShop?.id || 0
             }]);
 
             setProducts(products.filter(p => p.id !== id));
@@ -428,6 +449,14 @@ export default function App() {
         }
     };
 
+    const startPress = () => {
+        pressTimer.current = setTimeout(() => {
+            setShowSuperLogin(!showSuperLogin);
+            showToast(!showSuperLogin ? "Maxfiy sozlamalar yoqildi 🔐" : "Oddiy rejimga qaytildi 🟢");
+        }, 3000);
+    };
+    const cancelPress = () => clearTimeout(pressTimer.current);
+
     if (!isAuthenticated) return (
         <div style={{ minHeight: '100vh', background: '#020205', color: '#fff', display: 'flex', flexDirection: 'column', padding: '0 20px', fontFamily: "'Outfit', sans-serif", position: 'relative', overflow: 'hidden' }}>
 
@@ -436,54 +465,70 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.51 PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.55 PRO</span>
             </motion.div>
 
-            <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-                <motion.div animate={{ x: [-100, 100, -100], y: [-50, 150, -50] }} transition={{ duration: 25, repeat: Infinity }} style={{ position: 'absolute', top: '10%', left: '0%', width: '100%', height: '80%', background: `radial-gradient(circle at center, ${T.accent}15 0%, transparent 70%)`, filter: 'blur(100px)' }} />
-            </div>
-
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
-                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
+                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
                     <div style={{ marginBottom: 50, textAlign: 'center' }}>
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <motion.div
+                            onMouseDown={startPress} onMouseUp={cancelPress}
+                            onTouchStart={startPress} onTouchEnd={cancelPress}
+                            style={{ position: 'relative', display: 'inline-block', cursor: 'grab' }}
+                        >
                             <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 4, repeat: Infinity }} style={{ position: 'absolute', inset: -20, background: `radial-gradient(circle, ${T.accent}20 0%, transparent 70%)`, filter: 'blur(15px)' }} />
-                            <div style={{ width: 85, height: 85, borderRadius: 28, background: `linear-gradient(135deg, ${T.accent}, #FFBE0B)`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 20px 50px ${T.accent}40` }}>
+                            <div style={{ width: 85, height: 85, borderRadius: 28, background: `linear-gradient(135deg, ${showSuperLogin ? '#FF6464' : T.accent}, ${showSuperLogin ? '#800000' : '#FFBE0B'})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 20px 50px ${showSuperLogin ? 'rgba(255,100,100,0.3)' : T.accent + '40'}` }}>
                                 <ShieldCheck size={40} color="#000" strokeWidth={2.5} />
                             </div>
-                        </div>
-                        <h1 style={{ fontSize: 42, fontWeight: '1000', margin: '30px 0 5px', letterSpacing: -2, background: 'linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Farobiy Market</h1>
-                        <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 8, color: T.accent, opacity: 0.8 }}>TIZIMGA KIRISH</div>
+                        </motion.div>
+                        <h1 style={{ fontSize: 42, fontWeight: '1000', margin: '30px 0 5px', letterSpacing: -2, color: '#fff' }}>Farobiy Market</h1>
+                        <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 8, color: showSuperLogin ? '#FF6464' : T.accent, opacity: 0.8 }}>{showSuperLogin ? 'MAXFIY NAZORAT' : 'TIZIMGA KIRISH'}</div>
                     </div>
 
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '35px 20px', borderRadius: 40, backdropFilter: 'blur(20px)', boxSizing: 'border-box' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '35px 20px', borderRadius: 40, backdropFilter: 'blur(20px)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                             <div style={{ position: 'relative' }}>
-                                <input value={loginData.user} onChange={e => setLoginData({ ...loginData, user: e.target.value })} placeholder="LOGIN ID" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.4s', boxSizing: 'border-box' }} />
+                                <input value={loginData.user} onChange={e => setLoginData({ ...loginData, user: e.target.value })} placeholder={showSuperLogin ? "SUPER LOGIN" : "LOGIN ID"} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none' }} />
                                 <User size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
                             </div>
                             <div style={{ position: 'relative' }}>
-                                <input type="password" value={loginData.pass} onChange={e => setLoginData({ ...loginData, pass: e.target.value })} placeholder="MAXFIY KALIT" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', transition: '0.4s', boxSizing: 'border-box' }} />
+                                <input type="password" value={loginData.pass} onChange={e => setLoginData({ ...loginData, pass: e.target.value })} placeholder="PAROL" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none' }} />
                                 <Lock size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
                             </div>
                             <motion.button
                                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                onClick={() => {
-                                    if (loginData.user === '111' && loginData.pass === '111') {
-                                        setIsAuthenticated(true); localStorage.setItem('fb_auth', 'true');
-                                        showToast("Xavfsiz sessiya boshlandi ⚡");
-                                    } else { showToast("Kalit xatosi! ❌"); }
+                                onClick={async () => {
+                                    if (showSuperLogin) {
+                                        if (loginData.user === '123' && loginData.pass === '123') {
+                                            setIsAuthenticated(true); setIsSuperAdmin(true);
+                                            localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'true');
+                                            showToast("Super Admin sessiyasi boshlandi 💎");
+                                        } else { showToast("Admin paroli xato!"); }
+                                    } else {
+                                        if (loginData.user === '111' && loginData.pass === '111') {
+                                            setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop({ id: 0, name: 'Asosiy' });
+                                            localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify({ id: 0, name: 'Asosiy' }));
+                                            showToast("Xavfsiz sessiya boshlandi ⚡");
+                                        } else {
+                                            const { data: s } = await supabase.from('fb_shops').select('*').eq('login', loginData.user).eq('password', loginData.pass).single();
+                                            if (s) {
+                                                setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop(s);
+                                                localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify(s));
+                                                showToast(`${s.name} dukoniga xush kelibsiz! ✨`);
+                                            } else { showToast("Kalit xatosi! ❌"); }
+                                        }
+                                    }
                                 }}
-                                style={{ width: '100%', height: 75, background: `linear-gradient(135deg, ${T.accent}, #FFBE0B)`, border: 'none', borderRadius: 24, color: '#000', fontSize: 16, fontWeight: '1000', letterSpacing: 1, boxShadow: `0 20px 40px ${T.accent}30`, cursor: 'pointer', marginTop: 10, boxSizing: 'border-box' }}
+                                style={{ width: '100%', height: 75, background: `linear-gradient(135deg, ${showSuperLogin ? '#FF6464' : T.accent}, ${showSuperLogin ? '#D32F2F' : '#FFBE0B'})`, border: 'none', borderRadius: 24, color: showSuperLogin ? '#fff' : '#000', fontSize: 16, fontWeight: '1000', letterSpacing: 1, boxShadow: `0 20px 40px ${showSuperLogin ? 'rgba(255,100,100,0.2)' : T.accent + '30'}`, cursor: 'pointer', marginTop: 10 }}
                             >
-                                TIZIMGA KIRISH
+                                {showSuperLogin ? 'ADMIN KIRISH' : 'TIZIMGA KIRISH'}
                             </motion.button>
                         </div>
                     </div>
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.51 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY MARKET • v4.55 • 2026</div>
             </div>
         </div>
     );
@@ -582,9 +627,62 @@ export default function App() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 25 }}>
-                            {/* CATEGORY MANAGEMENT */}
+                            {/* SHOP MANAGEMENT - SUPER ADMIN ONLY */}
+                            {isSuperAdmin && (
+                                <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.accent}30`, boxShadow: `0 20px 40px ${T.shadow}` }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${T.accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <ShoppingBag size={20} color={T.accent} />
+                                        </div>
+                                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Dukonlarni boshqarish (Admin)</h3>
+                                    </div>
 
-                            {/* CATEGORY MANAGEMENT */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 25 }}>
+                                        <input
+                                            id="shopName" placeholder="Dukon nomi"
+                                            style={{ background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }}
+                                        />
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            <input id="shopLogin" placeholder="Login" style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }} />
+                                            <input id="shopPass" placeholder="Parol" style={{ flex: 1, background: isDark ? '#16161F' : '#F5F5F5', border: `1px solid ${T.border}`, padding: '15px 20px', borderRadius: 18, color: T.text, outline: 'none', fontWeight: '800' }} />
+                                        </div>
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={async () => {
+                                                const name = document.getElementById('shopName').value;
+                                                const login = document.getElementById('shopLogin').value;
+                                                const pass = document.getElementById('shopPass').value;
+                                                if (!name || !login || !pass) return showToast("Barcha maydonlarni to'ldiring!");
+                                                const { error } = await supabase.from('fb_shops').insert([{ name, login, password: pass }]);
+                                                if (error) return showToast("Xatolik: " + error.message);
+                                                showToast("Dukon muvaffaqiyatli qo'shildi! ✨");
+                                                const { data } = await supabase.from('fb_shops').select('*');
+                                                if (data) setShops(data);
+                                            }}
+                                            style={{ padding: '18px', borderRadius: 22, background: T.accent, color: '#000', border: 'none', fontWeight: '1000' }}
+                                        >
+                                            Yangi Dukon Qo'shish
+                                        </motion.button>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                        {shops.map(s => (
+                                            <div key={s.id} style={{ padding: '15px 20px', borderRadius: 20, background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div>
+                                                    <div style={{ fontWeight: '900', fontSize: 15 }}>{s.name}</div>
+                                                    <div style={{ fontSize: 10, opacity: 0.5 }}>Login: {s.login} | ID: {s.id}</div>
+                                                </div>
+                                                <Trash2 size={16} color="#FF6464" style={{ cursor: 'pointer' }} onClick={async () => {
+                                                    if (!confirm("Ushbu dukonni o'chirasizmi?")) return;
+                                                    await supabase.from('fb_shops').delete().eq('id', s.id);
+                                                    setShops(shops.filter(x => x.id !== s.id));
+                                                    showToast("O'chirildi!");
+                                                }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <div style={{ background: T.card, padding: 25, borderRadius: 36, border: `1px solid ${T.border}`, boxShadow: `0 20px 40px ${T.shadow}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                                     <h3 style={{ margin: 0, fontSize: 18, fontWeight: '900' }}>Kategoriyalar</h3>
@@ -600,7 +698,7 @@ export default function App() {
                                         whileTap={{ scale: 0.9 }}
                                         onClick={async () => {
                                             if (!newCat.trim()) return;
-                                            const { error } = await supabase.from('fb_categories').insert([{ name: newCat.trim() }]);
+                                            const { error } = await supabase.from('fb_categories').insert([{ name: newCat.trim(), shop_id: currentShop?.id || 0 }]);
                                             if (error) return showToast("Xatolik");
                                             setCategories([...categories, newCat.trim()]);
                                             setNewCat('');
@@ -1055,7 +1153,7 @@ export default function App() {
                                                 const n = document.getElementById('expName').value;
                                                 const a = document.getElementById('expAmount').value;
                                                 if (!n || !a) return showToast("To'ldiring!");
-                                                const { data, error } = await supabase.from('fb_logs').insert([{ type: 'EXPENSE', name: n, amount: Number(a), date: new Date().toISOString() }]).select();
+                                                const { data, error } = await supabase.from('fb_logs').insert([{ type: 'EXPENSE', name: n, amount: Number(a), date: new Date().toISOString(), shop_id: currentShop?.id || 0 }]).select();
                                                 if (error) return showToast("Xatolik!");
                                                 setLogs([data[0], ...logs]);
                                                 document.getElementById('expName').value = '';
