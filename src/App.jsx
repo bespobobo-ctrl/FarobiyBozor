@@ -407,7 +407,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.34 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.35 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <motion.div whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)} style={{ width: 48, height: 48, borderRadius: 16, background: T.card, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
@@ -532,6 +532,8 @@ export default function App() {
                                     <motion.button
                                         whileTap={{ scale: 0.98 }}
                                         onClick={async () => {
+                                            const code = prompt("O'chirish uchun maxsus kodni kiriting:");
+                                            if (code !== '111') return showToast("Kod noto'g'ri! ❌");
                                             if (!confirm("Barcha TARIXNI o'chirib, hisobotlarni nolga tushirasizmi? Bu amalni orqaga qaytarib bo'lmaydi!")) return;
                                             const { error } = await supabase.from('fb_logs').delete().neq('id', 0);
                                             if (error) return showToast("Xatolik!");
@@ -546,6 +548,8 @@ export default function App() {
                                     <motion.button
                                         whileTap={{ scale: 0.98 }}
                                         onClick={async () => {
+                                            const code = prompt("O'chirish uchun maxsus kodni kiriting:");
+                                            if (code !== '111') return showToast("Kod noto'g'ri! ❌");
                                             if (!confirm("Barcha MAHSULOTLARNI o'chirib yuborasizmi? Ombordagi barcha ma'lumotlar yo'qoladi!")) return;
                                             const { error } = await supabase.from('fb_products').delete().neq('id', 0);
                                             if (error) return showToast("Xatolik!");
@@ -561,7 +565,7 @@ export default function App() {
                         </div>
 
                         <div style={{ padding: 40, textAlign: 'center', opacity: 0.2, fontSize: 10, fontWeight: '1000', letterSpacing: 3 }}>
-                            FAROBIY MARKET • v4.34
+                            FAROBIY MARKET • v4.35
                         </div>
                     </motion.div>
                 )}
