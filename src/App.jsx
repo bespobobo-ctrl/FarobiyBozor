@@ -466,7 +466,7 @@ export default function App() {
                 style={{ position: 'absolute', top: 50, right: 30, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: 12, backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 8 }}
             >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
-                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.56 PRO</span>
+                <span style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 2, opacity: 0.8 }}>v4.57 PRO</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -486,14 +486,14 @@ export default function App() {
                         <div style={{ fontSize: 9, fontWeight: '1000', letterSpacing: 8, color: showSuperLogin ? '#FF6464' : T.accent, opacity: 0.8 }}>{showSuperLogin ? 'MAXFIY NAZORAT' : 'TIZIMGA KIRISH'}</div>
                     </div>
 
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '35px 20px', borderRadius: 40, backdropFilter: 'blur(20px)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '35px 25px', borderRadius: 40, backdropFilter: 'blur(20px)', boxSizing: 'border-box' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                             <div style={{ position: 'relative' }}>
-                                <input value={loginData.user} onChange={e => setLoginData({ ...loginData, user: e.target.value })} placeholder={showSuperLogin ? "SUPER LOGIN" : "LOGIN ID"} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none' }} />
+                                <input value={loginData.user} onChange={e => setLoginData({ ...loginData, user: e.target.value })} placeholder={showSuperLogin ? "SUPER LOGIN" : "LOGIN ID"} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
                                 <User size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
                             </div>
                             <div style={{ position: 'relative' }}>
-                                <input type="password" value={loginData.pass} onChange={e => setLoginData({ ...loginData, pass: e.target.value })} placeholder="PAROL" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none' }} />
+                                <input type="password" value={loginData.pass} onChange={e => setLoginData({ ...loginData, pass: e.target.value })} placeholder="PAROL" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '22px 25px 22px 60px', borderRadius: 24, color: '#fff', fontSize: 16, fontWeight: '700', outline: 'none', boxSizing: 'border-box' }} />
                                 <Lock size={18} style={{ position: 'absolute', left: 25, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
                             </div>
                             <motion.button
