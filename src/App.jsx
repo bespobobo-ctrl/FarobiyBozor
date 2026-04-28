@@ -499,7 +499,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>FAROBIY MARKET</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.53 BOUTIQUE PRO</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>Boshqaruv <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.54 BOUTIQUE PRO</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
