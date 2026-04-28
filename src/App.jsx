@@ -627,6 +627,15 @@ export default function App() {
                                             fd.append('chat_id', '2134273896');
                                             fd.append('photo', file);
                                             fd.append('caption', `To'lov tushdimi mana sikirin shoti\n\nTarif: ${selectedPlan?.name}\nSumma: ${selectedPlan?.price.toLocaleString()} UZS`);
+
+                                            const markup = JSON.stringify({
+                                                inline_keyboard: [
+                                                    [{ text: "✅ TASDIQLASH", callback_data: "approve_user" }],
+                                                    [{ text: "❌ BEKOR QILISH", callback_data: "reject_user" }]
+                                                ]
+                                            });
+                                            fd.append('reply_markup', markup);
+
                                             await fetch(`https://api.telegram.org/bot8742721286:AAH4dj2xfNUf2J8lY3W9ccxRw3LIUeFLyxw/sendPhoto`, {
                                                 method: 'POST',
                                                 body: fd
