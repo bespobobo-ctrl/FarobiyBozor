@@ -163,8 +163,9 @@ export default function App() {
                 if (l) setLogs(l);
 
                 // Categories usually global or per shop - here we check if categories exist
+                const currentSid = currentShop?.id;
                 // Categories extraction: STRICTLY scoped to this shop only
-                const { data: c } = await supabase.from('fb_categories').select('name').eq('shop_id', sid);
+                const { data: c } = await supabase.from('fb_categories').select('name').eq('shop_id', currentSid);
 
                 const dbCats = c ? c.map(x => x.name.trim()) : [];
                 const productCats = p ? [...new Set(p.map(x => (x.category || 'Nomaʼlum').trim()))] : [];
