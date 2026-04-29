@@ -673,13 +673,18 @@ export default function App() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
                                 <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 10, textAlign: 'center' }}>TARIFNI TANLANG</div>
                                 {[
+                                    { name: 'Sinov (Bepul)', price: 0, period: '1 Oy', accent: '#10B981' },
                                     { name: 'Odiy', price: 250000, period: '1 Oy', accent: '#BBBBBB' },
                                     { name: 'Premium', price: 700000, period: '3 Oy', accent: T.accent, recommended: true },
                                     { name: 'Super Premium', price: 1200000, period: '1 Yil', accent: '#00D4FF' }
                                 ].map((p, i) => (
                                     <motion.div
                                         key={i} whileTap={{ scale: 0.98 }}
-                                        onClick={() => { setSelectedPlan(p); setRegStep('payment'); }}
+                                        onClick={() => {
+                                            setSelectedPlan(p);
+                                            if (p.price === 0) setRegStep('register');
+                                            else setRegStep('payment');
+                                        }}
                                         style={{ background: 'rgba(255,255,255,0.03)', border: p.recommended ? `2px solid ${p.accent}` : '1px solid rgba(255,255,255,0.08)', padding: 20, borderRadius: 24, position: 'relative' }}
                                     >
                                         <div style={{ fontSize: 11, fontWeight: '1000', color: p.accent }}>{p.name}</div>
