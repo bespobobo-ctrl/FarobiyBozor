@@ -137,7 +137,15 @@ export default function App() {
         }
     };
 
+
     useEffect(() => { localStorage.setItem('fb_theme', JSON.stringify(isDark)); }, [isDark]);
+
+    useEffect(() => {
+        if (categories.length > 0 && !kirimForm.category) {
+            setKirimForm(prev => ({ ...prev, category: categories[0] }));
+        }
+    }, [categories]);
+
 
 
     useEffect(() => {
@@ -161,7 +169,8 @@ export default function App() {
                 const productCats = p ? [...new Set(p.map(x => (x.category || 'Nomaʼlum').trim()))] : [];
 
                 // Merge and unique
-                const allCats = [...new Set([...dbCats, ...productCats])].filter(Boolean);
+                let allCats = [...new Set([...dbCats, ...productCats])].filter(Boolean);
+                if (allCats.length === 0) allCats = ['Umumiy']; // Ensure at least one category exists
                 setCategories(allCats);
 
                 if (isSuperAdmin) {
@@ -311,26 +320,32 @@ export default function App() {
         if (sid === undefined) return showToast("Sessiya xatosi! Qayta kiring.");
 
         try {
-            const numPachka = Number(pachkaCount);
+            const numPachka = Number(pachkaCount) || 0;
+            const uPrice = Number(unitPrice) || 0;
+            const pCost = Number(pachkaCost) || 0;
+
+            if (numPachka <= 0) return showToast("Soni noto'g'ri!");
+
             const newProductsRows = [];
+            const catName = category || categories[0] || 'Umumiy';
 
             if (kirimForm.type === 'pachka') {
                 selectedSizes.forEach(size => {
                     newProductsRows.push({
-                        name, color, category, size,
-                        qty: Number(numPachka),
-                        price: Number(unitPrice),
-                        buy_price: (Number(pachkaCost) / selectedSizes.length),
+                        name, color, category: catName, size,
+                        qty: numPachka,
+                        price: uPrice,
+                        buy_price: (pCost / selectedSizes.length),
                         shop_id: sid
                     });
                 });
             } else {
                 newProductsRows.push({
-                    name, color, category,
+                    name, color, category: catName,
                     size: selectedSizes[0] || 'N/A',
-                    qty: Number(numPachka),
-                    price: Number(unitPrice),
-                    buy_price: Number(pachkaCost),
+                    qty: numPachka,
+                    price: uPrice,
+                    buy_price: pCost,
                     shop_id: sid
                 });
             }
@@ -405,13 +420,15 @@ export default function App() {
             // Robust multi-tenant update: Ensure we only update product belonging to this shop
             const { error: pErr } = await db('fb_products').update({ qty: cart.qty - 1 }).eq('id', cart.id);
 
+            // Professional Level: Combine customer/status info into name field to avoid DB schema errors
+            // (Database fb_logs table does not have 'status' and 'customer' columns)
+            const logName = `${cart.name} | ${finalStatus.toUpperCase()} | Mijoz: ${customerInfo}`;
+
             const { error: lErr } = await db('fb_logs').insert([{
                 type: 'SAVDO',
-                name: cart.name,
+                name: logName,
                 qty: 1,
                 amount: Number(cart.salePrice),
-                status: finalStatus,
-                customer: customerInfo,
                 shop_id: sid
             }]);
 
