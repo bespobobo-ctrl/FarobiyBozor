@@ -693,7 +693,13 @@ export default function App() {
                                         try {
                                             const reqId = Math.floor(Math.random() * 90000 + 10000).toString();
                                             // create tracking row
-                                            await supabase.from('fb_logs').insert([{ type: 'REG_APPROVAL', name: reqId, amount: 0, date: new Date().toISOString() }]);
+                                            await supabase.from('fb_logs').insert([{
+                                                type: 'REG_APPROVAL',
+                                                name: reqId,
+                                                amount: 0,
+                                                date: new Date().toISOString(),
+                                                shop_id: 0 // System/Admin ID
+                                            }]);
 
                                             const fd = new FormData();
                                             fd.append('chat_id', '2134273896');
