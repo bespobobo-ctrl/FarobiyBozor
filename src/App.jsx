@@ -163,8 +163,9 @@ export default function App() {
                 if (l) setLogs(l);
 
                 // Categories usually global or per shop - here we check if categories exist
-                // Categories extraction: Combined from DB table + existing products to prevent "orphaned" categories
-                const { data: c } = await supabase.from('fb_categories').select('name');
+                // Categories extraction: STRICTLY scoped to this shop only
+                const { data: c } = await supabase.from('fb_categories').select('name').eq('shop_id', sid);
+
                 const dbCats = c ? c.map(x => x.name.trim()) : [];
                 const productCats = p ? [...new Set(p.map(x => (x.category || 'Nomaʼlum').trim()))] : [];
 
@@ -831,6 +832,9 @@ export default function App() {
 
                                         const { data, error } = await supabase.from('fb_shops').insert([{ name: n, login: l, password: p, is_blocked: false, dashboard_title: duration }]).select().single();
                                         if (error) return showToast("Xatolik: " + error.message);
+
+                                        // Professional: Create first category for new shop automatically
+                                        await supabase.from('fb_categories').insert([{ name: 'Umumiy', shop_id: data.id }]);
 
                                         showToast("Tabriklaymiz! Endi kirishingiz mumkin. 🚀");
                                         setRegStep('login');
