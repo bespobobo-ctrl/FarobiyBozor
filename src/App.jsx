@@ -314,6 +314,17 @@ export default function App() {
 
     const showToast = (t) => { setMsg(t); setTimeout(() => setMsg(null), 3000); };
 
+    const getPrintItems = (items) => {
+        let arr = [];
+        items.forEach(it => {
+            const count = Number(it.qty) || 1;
+            for (let i = 0; i < count; i++) {
+                arr.push({ ...it, uniqueId: (it.id || Date.now()) + '_' + i });
+            }
+        });
+        return arr;
+    };
+
     const handleKirimSubmit = async () => {
         const { name, color, category, pachkaCount, unitPrice, selectedSizes, pachkaCost } = kirimForm;
         if (!name || !pachkaCount || !unitPrice || selectedSizes.length === 0) return showToast("Barcha maydonlarni to'ldiring!");
@@ -378,6 +389,8 @@ export default function App() {
             }, ...logs]);
 
             setShowKirim(false);
+            const itemsToPrint = (insertedProducts && insertedProducts.length > 0) ? insertedProducts : newProductsRows;
+            setShowPrint(getPrintItems(itemsToPrint));
             showToast("Muvaffaqiyatli saqlandi! ✅");
         } catch (err) {
             showToast("Xatolik: " + err.message);
@@ -586,7 +599,7 @@ export default function App() {
                 style={{ position: 'absolute', bottom: 30, right: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: 10, backdropFilter: 'blur(5px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 6 }}
             >
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
-                <span style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 1.5, opacity: 0.5, color: '#fff' }}>v4.70 ELITE</span>
+                <span style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 1.5, opacity: 0.5, color: '#fff' }}>v4.71 ELITE</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -620,16 +633,37 @@ export default function App() {
                                 <motion.button
                                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                     onClick={async () => {
+                                        // Brute-force protection
+                                        const now = Date.now();
+                                        const blockedUntil = localStorage.getItem('fb_blocked_until');
+                                        const attempts = Number(localStorage.getItem('fb_login_attempts') || 0);
+
+                                        if (blockedUntil && now < Number(blockedUntil)) {
+                                            const minutesLeft = Math.ceil((Number(blockedUntil) - now) / 60000);
+                                            return showToast(`Bloklangansiz! ${minutesLeft} daqiqadan so'ng urinib ko'ring.`);
+                                        }
+
                                         if (showSuperLogin) {
                                             if (loginData.user === '123' && loginData.pass === '123') {
                                                 setIsAuthenticated(true); setIsSuperAdmin(true); setCurrentShop(null);
                                                 localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'true'); localStorage.removeItem('fb_shop');
+                                                localStorage.removeItem('fb_login_attempts'); localStorage.removeItem('fb_blocked_until');
                                                 showToast("Super Admin sessiyasi boshlandi 💎");
-                                            } else { showToast("Admin paroli xato!"); }
+                                            } else {
+                                                const newA = attempts + 1;
+                                                localStorage.setItem('fb_login_attempts', newA);
+                                                if (newA >= 4) {
+                                                    localStorage.setItem('fb_blocked_until', Date.now() + 3600000);
+                                                    showToast("Ketma-ket 4 marta xato! 1 soatga bloklandingiz.");
+                                                } else {
+                                                    showToast(`Admin paroli xato! (${newA}/4)`);
+                                                }
+                                            }
                                         } else {
                                             if (loginData.user === '111' && loginData.pass === '111') {
                                                 setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop({ id: 0, name: 'Asosiy' });
                                                 localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify({ id: 0, name: 'Asosiy' }));
+                                                localStorage.removeItem('fb_login_attempts');
                                                 showToast("Xavfsiz sessiya boshlandi ⚡");
                                             } else {
                                                 const { data: s } = await supabase.from('fb_shops').select('*').eq('login', loginData.user).eq('password', loginData.pass).single();
@@ -637,16 +671,6 @@ export default function App() {
                                                     if (s.is_blocked) return showToast("Dukoningiz bloklangan! 🛑 Admin bilan bog'laning.");
                                                     setIsAuthenticated(true); setIsSuperAdmin(false); setCurrentShop(s);
                                                     localStorage.setItem('fb_auth', 'true'); localStorage.setItem('fb_is_super', 'false'); localStorage.setItem('fb_shop', JSON.stringify(s));
-
-                                                    // Ilova (frontend) ga kirganda LOG yozish - Har bir dukon uchun alohida
-                                                    supabase.from('fb_logs').insert([{
-                                                        type: 'LOGIN',
-                                                        name: s.login,
-                                                        amount: 0,
-                                                        date: new Date().toISOString(),
-                                                        shop_id: s.id
-                                                    }]).then(() => { });
-
                                                     showToast(`${s.name} dukoniga xush kelibsiz! ✨`);
                                                 } else { showToast("Kalit xatosi! ❌"); }
                                             }
@@ -684,6 +708,7 @@ export default function App() {
                                         key={i} whileTap={{ scale: 0.98 }}
                                         onClick={() => {
                                             setSelectedPlan(p);
+                                            setRegForm({ name: '', login: '', password: '' });
                                             if (p.price === 0) setRegStep('register');
                                             else setRegStep('payment');
                                         }}
@@ -850,7 +875,7 @@ export default function App() {
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY BOZORI • v4.70 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY BOZORI • v4.71 • 2026</div>
             </div>
         </div>
     );
@@ -866,7 +891,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY BOZORI'}</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.70</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.71</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -1295,6 +1320,7 @@ export default function App() {
                                             <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                                                 <div style={{ fontSize: 22, fontWeight: '1000', color: T.accent }}>{p.items.length} <small style={{ fontSize: 10 }}>DONA</small></div>
                                                 <div style={{ display: 'flex', gap: 6 }}>
+                                                    <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems(p.items)); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}30`, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Printer size={13} /></motion.button>
                                                     <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setEditingItem(p.items[0]); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={13} /></motion.button>
                                                     <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleDeleteGroup(p); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></motion.button>
                                                 </div>
@@ -1318,7 +1344,7 @@ export default function App() {
                                                                 <div style={{ display: 'flex', gap: 5 }}>
                                                                     <motion.button
                                                                         whileTap={{ scale: 0.9 }}
-                                                                        onClick={(e) => { e.stopPropagation(); setShowPrint([item]); }}
+                                                                        onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}
                                                                         style={{ flex: 1, height: 32, borderRadius: 8, border: 'none', background: `${T.accent}20`, color: T.accent }}
                                                                     ><Printer size={14} /></motion.button>
                                                                     <motion.button
