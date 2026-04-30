@@ -423,7 +423,12 @@ export default function App() {
 
     const handleSavdoSubmit = async () => {
         if (!cart) return;
-        if (cart.qty < 1) return showToast("Zaxira yetarli emas!");
+
+        const isPack = cart.saleType === 'pachka';
+        const packItems = isPack ? products.filter(p => p.name === cart.name && p.color === cart.color && p.category === cart.category) : [cart];
+        const itemIds = packItems.map(p => p.id);
+
+        if (packItems.some(p => p.qty < 1)) return showToast("Zaxirada yetarli mahsulot yo'q! 🚫");
         if (!cart.salePrice || Number(cart.salePrice) <= 0) return showToast("Sotuv narxini kiriting!");
 
         const sid = currentShop?.id;
@@ -438,30 +443,31 @@ export default function App() {
                 ? `${cart.customerName} (${cart.customerPhone})`
                 : (cart.customerName || 'Nomaʼlum');
 
-            // Robust multi-tenant update: Ensure we only update product belonging to this shop
-            const { error: pErr } = await supabase.from('fb_products').update({ qty: cart.qty - 1 }).eq('id', cart.id);
+            // Robust multi-tenant update: Update each item individually in parallel since they have different precise state values
+            const updatePromises = packItems.map(p =>
+                supabase.from('fb_products').update({ qty: p.qty - 1 }).eq('id', p.id)
+            );
+            await Promise.all(updatePromises);
 
             // Professional Level: Combine customer/status info into name field to avoid DB schema errors
-            // (Database fb_logs table does not have 'status' and 'customer' columns)
-            const logName = `${cart.name} | ${finalStatus.toUpperCase()} | Mijoz: ${customerInfo}`;
+            const logName = `${cart.name} ${isPack ? '(PACHKA)' : `(R: ${cart.size})`} | ${finalStatus.toUpperCase()} | Mijoz: ${customerInfo}`;
 
             const { error: lErr } = await supabase.from('fb_logs').insert([{
                 type: 'SAVDO',
                 name: logName,
-                qty: 1,
+                qty: isPack ? packItems.length : 1,
                 amount: Number(cart.salePrice),
                 shop_id: sid
             }]);
 
-            if (pErr) throw new Error("Ombor yangilashda xatolik: " + pErr.message);
             if (lErr) console.error("Log error:", lErr.message);
 
-            setProducts(products.map(p => p.id === cart.id ? { ...p, qty: p.qty - 1 } : p));
+            setProducts(products.map(p => itemIds.includes(p.id) ? { ...p, qty: p.qty - 1 } : p));
             setLogs([{
                 id: Date.now(),
                 type: 'SAVDO',
                 name: cart.name,
-                qty: 1,
+                qty: isPack ? packItems.length : 1,
                 amount: Number(cart.salePrice),
                 status: finalStatus,
                 customer: customerInfo,
@@ -2140,6 +2146,35 @@ export default function App() {
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 15, marginBottom: 25, textAlign: 'left' }}>
+                                        {/* SALE TYPE TOGGLE */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                            <motion.div
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => setCart({ ...cart, saleType: 'dona', salePrice: cart.price })}
+                                                style={{
+                                                    padding: '12px', borderRadius: 15, textAlign: 'center', cursor: 'pointer',
+                                                    background: (cart.saleType === 'dona' || !cart.saleType) ? `${T.accent}20` : 'transparent',
+                                                    border: `1px solid ${(cart.saleType === 'dona' || !cart.saleType) ? T.accent : T.border}`
+                                                }}
+                                            >
+                                                <div style={{ fontSize: 11, fontWeight: '1000', color: (cart.saleType === 'dona' || !cart.saleType) ? T.accent : T.text }}>DONA (SINGLE)</div>
+                                            </motion.div>
+                                            <motion.div
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => {
+                                                    const packItems = products.filter(p => p.name === cart.name && p.color === cart.color && p.category === cart.category);
+                                                    setCart({ ...cart, saleType: 'pachka', salePrice: cart.price * packItems.length });
+                                                }}
+                                                style={{
+                                                    padding: '12px', borderRadius: 15, textAlign: 'center', cursor: 'pointer',
+                                                    background: cart.saleType === 'pachka' ? `${T.accent}20` : 'transparent',
+                                                    border: `1px solid ${cart.saleType === 'pachka' ? T.accent : T.border}`
+                                                }}
+                                            >
+                                                <div style={{ fontSize: 11, fontWeight: '1000', color: cart.saleType === 'pachka' ? T.accent : T.text }}>PACHKA TIZIMI</div>
+                                            </motion.div>
+                                        </div>
+
                                         {/* DYNAMIC PRICE */}
                                         <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : '#F5F5F7', padding: '15px 20px', borderRadius: 20, border: `1px solid ${T.border}` }}>
                                             <div style={{ fontSize: 9, fontWeight: '1000', opacity: 0.4, marginBottom: 5, letterSpacing: 1 }}>SOTUV NARXI (KELISHILGAN)</div>
