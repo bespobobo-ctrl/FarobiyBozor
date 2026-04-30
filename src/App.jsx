@@ -552,17 +552,36 @@ export default function App() {
     const handleUpdateProduct = async () => {
         if (!editingItem) return;
         try {
-            const { error } = await supabase.from('fb_products').update({
-                name: editingItem.name,
-                color: editingItem.color,
-                size: editingItem.size,
-                qty: Number(editingItem.qty),
-                price: Number(editingItem.price),
-                buy_price: Number(editingItem.buy_price || 0),
-                category: editingItem.category
-            }).eq('id', editingItem.id);
+            const originalItem = products.find(p => p.id === editingItem.id);
+            if (!originalItem) return;
 
-            if (error) throw error;
+            // Find siblings to keep the pack unified (name, color, category)
+            const siblingIds = products
+                .filter(p => p.name === originalItem.name && p.color === originalItem.color && p.category === originalItem.category)
+                .map(p => p.id);
+
+            // Update core attributes (name, color, cat, price) for ALL siblings
+            const { error: groupError } = await supabase.from('fb_products')
+                .update({
+                    name: editingItem.name,
+                    color: editingItem.color,
+                    category: editingItem.category,
+                    price: Number(editingItem.price),
+                    buy_price: Number(editingItem.buy_price || 0)
+                })
+                .in('id', siblingIds);
+
+            if (groupError) throw groupError;
+
+            // Update individual attributes (size, qty) ONLY for the specifically edited item
+            const { error: singleError } = await supabase.from('fb_products')
+                .update({
+                    size: editingItem.size,
+                    qty: Number(editingItem.qty)
+                })
+                .eq('id', editingItem.id);
+
+            if (singleError) throw singleError;
 
             // Log update
             await supabase.from('fb_logs').insert([{
@@ -573,9 +592,27 @@ export default function App() {
                 shop_id: currentShop?.id
             }]);
 
-            setProducts(products.map(p => p.id === editingItem.id ? { ...editingItem, qty: Number(editingItem.qty), price: Number(editingItem.price), buy_price: Number(editingItem.buy_price || 0) } : p));
+            setProducts(products.map(p => {
+                // If it's the exact item, update everything
+                if (p.id === editingItem.id) {
+                    return { ...editingItem, qty: Number(editingItem.qty), price: Number(editingItem.price), buy_price: Number(editingItem.buy_price || 0) };
+                }
+                // If it's a sibling, sync the group properties
+                if (siblingIds.includes(p.id)) {
+                    return {
+                        ...p,
+                        name: editingItem.name,
+                        color: editingItem.color,
+                        category: editingItem.category,
+                        price: Number(editingItem.price),
+                        buy_price: Number(editingItem.buy_price || 0)
+                    };
+                }
+                return p;
+            }));
+
             setEditingItem(null);
-            showToast("O'zgarishlar saqlandi! ✅");
+            showToast("Barcha razmerlar bilan birga saqlandi! ✅");
         } catch (err) {
             showToast("Xatolik: " + err.message);
         }
