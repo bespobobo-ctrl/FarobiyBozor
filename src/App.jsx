@@ -103,9 +103,7 @@ export default function App() {
         }));
     };
 
-    const [products, setProducts] = useState([
-        { id: 1, name: 'Premium Shoyi Ko\'ylak', color: 'Qora', category: 'Premium', qty: 42, sizeRange: 'M, L, XL', price: 850000, buy_price: 550000 },
-    ]);
+    const [products, setProducts] = useState([]);
     const [sales, setSales] = useState([]);
     const [logs, setLogs] = useState([]);
 
@@ -1333,30 +1331,27 @@ export default function App() {
                                                 <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ background: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)' }}>
                                                     <div style={{ padding: 15, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
                                                         {p.items.map(item => (
-                                                            <div key={item.id} style={{ background: T.card, padding: 12, borderRadius: 18, border: `1px solid ${T.border}`, textAlign: 'center' }}>
-                                                                <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, marginBottom: 5 }}>R: {item.size}</div>
-                                                                <div
-                                                                    onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}
-                                                                    style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, cursor: 'pointer' }}
-                                                                >
-                                                                    <QRCodeSVG value={item.uid || `FB|${item.name}|${item.color}|${item.size}|${item.id}`} size={70} />
+                                                            <div key={item.id} style={{ background: T.card, padding: '18px 15px', borderRadius: 20, border: `1px solid ${T.border}`, textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 15 }} onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}>
+                                                                <div>
+                                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: T.text }}>{item.size} <span style={{ fontSize: 10, opacity: 0.4 }}>RAZMER</span></div>
+                                                                    <div style={{ fontSize: 12, fontWeight: '900', color: T.accent, marginTop: 4 }}>{item.qty} DONA MAVJUD</div>
                                                                 </div>
-                                                                <div style={{ display: 'flex', gap: 5 }}>
+                                                                <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
                                                                     <motion.button
                                                                         whileTap={{ scale: 0.9 }}
                                                                         onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}
-                                                                        style={{ flex: 1, height: 32, borderRadius: 8, border: 'none', background: `${T.accent}20`, color: T.accent }}
-                                                                    ><Printer size={14} /></motion.button>
+                                                                        style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: `${T.accent}20`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                    ><QrCode size={16} /></motion.button>
                                                                     <motion.button
                                                                         whileTap={{ scale: 0.9 }}
                                                                         onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
-                                                                        style={{ flex: 1, height: 32, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.05)', color: T.text }}
-                                                                    ><Edit size={14} /></motion.button>
+                                                                        style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.05)', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                    ><Edit size={16} /></motion.button>
                                                                     <motion.button
                                                                         whileTap={{ scale: 0.9 }}
                                                                         onClick={(e) => { e.stopPropagation(); handleDeleteProduct(item.id); }}
-                                                                        style={{ flex: 1, height: 32, borderRadius: 8, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464' }}
-                                                                    ><Trash2 size={14} /></motion.button>
+                                                                        style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                    ><Trash2 size={16} /></motion.button>
                                                                 </div>
                                                             </div>
                                                         ))}
