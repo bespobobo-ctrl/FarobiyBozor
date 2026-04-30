@@ -376,27 +376,24 @@ export default function App() {
             }]);
             if (lErr) console.error("Log error (Non-critical):", lErr.message);
 
-            // Re-fetch products to retrieve true database IDs (avoiding undefined UI mapping errors on update)
-            const { data: refetchedProducts } = await supabase.from('fb_products').select('*').order('id', { ascending: false });
-            if (refetchedProducts) {
-                // If not super admin, naturally filter by shop_id
-                setProducts(isSuperAdmin ? refetchedProducts : refetchedProducts.filter(p => Number(p.shop_id) === Number(sid)));
-            } else {
-                // Fallback mockup
-                let mocked = newProductsRows.map((row, idx) => ({ ...row, id: Date.now() + idx }));
-                setProducts([...mocked, ...products]);
-            }
+            // Update local state immediately with database-guaranteed data if available, or fallback
+            const finalProducts = (insertedProducts && insertedProducts.length > 0) ? insertedProducts : newProductsRows.map((r, i) => ({ ...r, id: Date.now() + i }));
+            setProducts(prev => [...finalProducts, ...prev]);
 
-            const { data: refetchedLogs } = await supabase.from('fb_logs').select('*').order('id', { ascending: false });
-            if (refetchedLogs) {
-                setLogs(isSuperAdmin ? refetchedLogs : refetchedLogs.filter(l => Number(l.shop_id) === Number(sid)));
-            } else {
-                setLogs([{ id: Date.now(), type: 'KIRIM', name: name, qty: newProductsRows.length, amount: totalAmount, date: new Date() }, ...logs]);
-            }
+            // Construct and add log
+            const newLog = {
+                id: Date.now(),
+                type: 'KIRIM',
+                name: name,
+                qty: newProductsRows.length,
+                amount: totalAmount,
+                date: new Date(),
+                shop_id: sid
+            };
+            setLogs(prev => [newLog, ...prev]);
 
             setShowKirim(false);
-            const itemsToPrint = (insertedProducts && insertedProducts.length > 0) ? insertedProducts : newProductsRows;
-            setShowPrint(getPrintItems(itemsToPrint));
+            setShowPrint(getPrintItems(finalProducts));
             showToast("Muvaffaqiyatli saqlandi! ✅");
         } catch (err) {
             showToast("Xatolik: " + err.message);
