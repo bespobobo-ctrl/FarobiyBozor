@@ -318,11 +318,11 @@ export default function App() {
         let arr = [];
         items.forEach(it => {
             const count = Number(it.qty) || 1;
-            for (let i = 0; i < count; i++) {
-                arr.push({ ...it, uniqueId: (it.id || Date.now()) + '_' + i });
+            for (let i = 1; i <= count; i++) {
+                arr.push({ ...it, uniqueId: (it.id || Date.now()) + '_' + i, packNum: i });
             }
         });
-        return arr;
+        return arr.sort((a, b) => a.packNum - b.packNum);
     };
 
     const handleKirimSubmit = async () => {
@@ -1336,8 +1336,8 @@ export default function App() {
                                                             <div key={item.id} style={{ background: T.card, padding: 12, borderRadius: 18, border: `1px solid ${T.border}`, textAlign: 'center' }}>
                                                                 <div style={{ fontSize: 10, fontWeight: '1000', color: T.accent, marginBottom: 5 }}>R: {item.size}</div>
                                                                 <div
-                                                                    onClick={(e) => { e.stopPropagation(); setViewingQR(item); }}
-                                                                    style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, cursor: 'zoom-in' }}
+                                                                    onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}
+                                                                    style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, cursor: 'pointer' }}
                                                                 >
                                                                     <QRCodeSVG value={item.uid || `FB|${item.name}|${item.color}|${item.size}|${item.id}`} size={70} />
                                                                 </div>
@@ -1973,11 +1973,11 @@ export default function App() {
                                     transition={{ delay: idx * 0.05 }}
                                     style={{ background: '#fff', color: '#000', borderRadius: 25, padding: 20, textAlign: 'center', border: '1px solid #ddd', pageBreakAfter: 'always' }}
                                 >
-                                    <div style={{ fontSize: 8, fontWeight: '1000', opacity: 0.4, marginBottom: 10, letterSpacing: 2 }}>FAROBIY MARKET • PASPORT</div>
+                                    <div style={{ fontSize: 10, fontWeight: '1000', opacity: 0.8, color: T.accent, marginBottom: 10, letterSpacing: 2 }}>PACHKA #{item.packNum || 1} • PASPORT</div>
 
                                     <div style={{ display: 'flex', justifyContent: 'center', margin: '15px 0' }}>
                                         <QRCodeSVG
-                                            value={item.uid || `FB|${item.name}|${item.color}|${item.size}|${Date.now()}`}
+                                            value={item.uid || `FB|${item.name}|${item.color}|${item.size}|P${item.packNum || 1}|${Date.now()}`}
                                             size={150}
                                             level="M"
                                             includeMargin={true}
@@ -1985,7 +1985,7 @@ export default function App() {
                                     </div>
 
                                     <div style={{ fontSize: 22, fontWeight: '1000', marginBottom: 4 }}>{item.name}</div>
-                                    <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 15 }}>Rangi: {item.color} | <span style={{ color: '#000', fontWeight: '900' }}>Razmer: {item.size}</span></div>
+                                    <div style={{ fontSize: 14, opacity: 0.8, marginBottom: 15 }}>Rangi: {item.color} | <span style={{ color: '#000', fontSize: 16, fontWeight: '900', background: '#f5f5f5', padding: '2px 8px', borderRadius: 8 }}>{item.size} - RAZMER</span></div>
 
                                     <div style={{ background: '#000', color: '#fff', padding: '10px', borderRadius: 12, fontSize: 24, fontWeight: '1000' }}>
                                         {item.price.toLocaleString()} <small style={{ fontSize: 12, opacity: 0.7 }}>SOM</small>
