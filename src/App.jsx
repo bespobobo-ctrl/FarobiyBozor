@@ -397,7 +397,7 @@ export default function App() {
     const deleteLog = async (id) => {
         if (!confirm("O'chirilsinmi?")) return;
         // Strict scope: can only delete logs belonging to this shop
-        const { error } = await db('fb_logs').delete().eq('id', id);
+        const { error } = await supabase.from('fb_logs').delete().eq('id', id);
         if (error) return showToast("Xatolik!");
         setLogs(logs.filter(l => l.id !== id));
         showToast("O'chirildi!");
@@ -405,7 +405,7 @@ export default function App() {
 
     const updateExpense = async (id, name, amount) => {
         // Strict scope: can only update expenses belonging to this shop
-        const { error } = await db('fb_logs').update({ name, amount: Number(amount) }).eq('id', id);
+        const { error } = await supabase.from('fb_logs').update({ name, amount: Number(amount) }).eq('id', id);
         if (error) return showToast("Xatolik!");
         setLogs(logs.map(l => l.id === id ? { ...l, name, amount: Number(amount) } : l));
         setEditingItem(null);
@@ -431,13 +431,13 @@ export default function App() {
                 : (cart.customerName || 'Nomaʼlum');
 
             // Robust multi-tenant update: Ensure we only update product belonging to this shop
-            const { error: pErr } = await db('fb_products').update({ qty: cart.qty - 1 }).eq('id', cart.id);
+            const { error: pErr } = await supabase.from('fb_products').update({ qty: cart.qty - 1 }).eq('id', cart.id);
 
             // Professional Level: Combine customer/status info into name field to avoid DB schema errors
             // (Database fb_logs table does not have 'status' and 'customer' columns)
             const logName = `${cart.name} | ${finalStatus.toUpperCase()} | Mijoz: ${customerInfo}`;
 
-            const { error: lErr } = await db('fb_logs').insert([{
+            const { error: lErr } = await supabase.from('fb_logs').insert([{
                 type: 'SAVDO',
                 name: logName,
                 qty: 1,
@@ -507,11 +507,11 @@ export default function App() {
         const item = products.find(p => p.id === id);
         if (!confirm("Haqiqatdan ham o'chirmoqchimisiz?")) return;
         try {
-            const { error } = await db('fb_products').delete().eq('id', id);
+            const { error } = await supabase.from('fb_products').delete().eq('id', id);
             if (error) throw error;
 
             // Log deletion
-            await db('fb_logs').insert([{
+            await supabase.from('fb_logs').insert([{
                 name: `${item?.name} (${item?.size})`,
                 type: 'DELETE',
                 amount: 0,
@@ -552,7 +552,7 @@ export default function App() {
     const handleUpdateProduct = async () => {
         if (!editingItem) return;
         try {
-            const { error } = await db('fb_products').update({
+            const { error } = await supabase.from('fb_products').update({
                 name: editingItem.name,
                 color: editingItem.color,
                 size: editingItem.size,
@@ -565,7 +565,7 @@ export default function App() {
             if (error) throw error;
 
             // Log update
-            await db('fb_logs').insert([{
+            await supabase.from('fb_logs').insert([{
                 name: editingItem.name,
                 type: 'EDIT',
                 amount: 0,
