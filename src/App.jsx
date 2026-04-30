@@ -1304,63 +1304,103 @@ export default function App() {
 
                             {groupedProducts
                                 .filter(gp => !searchQuery || gp.name.toLowerCase().includes(searchQuery.toLowerCase()) || gp.color.toLowerCase().includes(searchQuery.toLowerCase()))
-                                .map((p, gIdx) => (
-                                    <motion.div key={`${p.name}-${p.color}`} layout style={{ background: T.card, borderRadius: 32, overflow: 'hidden', border: `1px solid ${T.border}`, boxShadow: `0 10px 30px ${T.shadow}` }}>
-                                        <div
-                                            onClick={() => setExpanded(expanded === gIdx ? null : gIdx)}
-                                            style={{ padding: 20, borderBottom: expanded === gIdx ? `1px solid ${T.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}
-                                        >
-                                            <div>
-                                                <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 5 }}>{(p.category || '').toUpperCase()}</div>
-                                                <div style={{ fontSize: 20, fontWeight: '900' }}>{p.name} <small style={{ opacity: 0.4 }}>{p.color}</small></div>
-                                                <div style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>Razmerlar: {p.sizes.join(', ')}</div>
-                                            </div>
-                                            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                                                <div style={{ fontSize: 22, fontWeight: '1000', color: T.accent }}>{p.items.length} <small style={{ fontSize: 10 }}>DONA</small></div>
-                                                <div style={{ display: 'flex', gap: 6 }}>
-                                                    <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems(p.items)); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}30`, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Printer size={13} /></motion.button>
-                                                    <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setEditingItem(p.items[0]); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={13} /></motion.button>
-                                                    <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleDeleteGroup(p); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></motion.button>
-                                                </div>
-                                                <div style={{ fontSize: 9, opacity: 0.4, fontWeight: '900' }}>{expanded === gIdx ? 'YOPISH ▲' : 'Ko\'rish ▼'}</div>
-                                            </div>
-                                        </div>
+                                .map((p, gIdx) => {
+                                    const totalUnits = p.items.reduce((s, x) => s + Number(x.qty), 0);
+                                    const packCount = Math.max(...p.items.map(x => Number(x.qty)));
+                                    const costPrice = p.items[0]?.buy_price || 0;
+                                    const salePrice = p.items[0]?.price || 0;
+                                    const packPrice = salePrice * p.sizes.length;
+                                    const soldLogs = logs.filter(l => l.type === 'SAVDO' && l.name.startsWith(p.name + ' |'));
+                                    const soldQty = soldLogs.reduce((s, x) => s + Number(x.qty || 1), 0);
 
-                                        <AnimatePresence>
-                                            {expanded === gIdx && (
-                                                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ background: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)' }}>
-                                                    <div style={{ padding: 15, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
-                                                        {p.items.map(item => (
-                                                            <div key={item.id} style={{ background: T.card, padding: '18px 15px', borderRadius: 20, border: `1px solid ${T.border}`, textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 15 }} onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}>
-                                                                <div>
-                                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: T.text }}>{item.size} <span style={{ fontSize: 10, opacity: 0.4 }}>RAZMER</span></div>
-                                                                    <div style={{ fontSize: 12, fontWeight: '900', color: T.accent, marginTop: 4 }}>{item.qty} DONA MAVJUD</div>
+                                    return (
+                                        <motion.div key={`${p.name}-${p.color}`} layout style={{ background: T.card, borderRadius: 32, overflow: 'hidden', border: `1px solid ${T.border}`, boxShadow: `0 10px 30px ${T.shadow}` }}>
+                                            <div
+                                                onClick={() => setExpanded(expanded === gIdx ? null : gIdx)}
+                                                style={{ padding: 20, borderBottom: expanded === gIdx ? `1px solid ${T.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}
+                                            >
+                                                <div>
+                                                    <div style={{ fontSize: 9, fontWeight: '1000', color: T.accent, letterSpacing: 2, marginBottom: 5 }}>{(p.category || '').toUpperCase()}</div>
+                                                    <div style={{ fontSize: 20, fontWeight: '900' }}>{p.name} <small style={{ opacity: 0.4 }}>{p.color}</small></div>
+                                                    <div style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>Razmerlar: {p.sizes.join(', ')}</div>
+                                                </div>
+                                                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                                                    <div style={{ fontSize: 22, fontWeight: '1000', color: T.accent }}>{packCount} <small style={{ fontSize: 10 }}>PACHKA</small></div>
+                                                    <div style={{ display: 'flex', gap: 6 }}>
+                                                        <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems(p.items)); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}30`, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Printer size={13} /></motion.button>
+                                                        <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setEditingItem(p.items[0]); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: `${T.accent}15`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={13} /></motion.button>
+                                                        <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleDeleteGroup(p); }} style={{ width: 30, height: 30, borderRadius: 10, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></motion.button>
+                                                    </div>
+                                                    <div style={{ fontSize: 9, opacity: 0.4, fontWeight: '900' }}>{expanded === gIdx ? 'YOPISH ▲' : 'Ko\'rish ▼'}</div>
+                                                </div>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {expanded === gIdx && (
+                                                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ background: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)' }}>
+                                                        <div style={{ padding: 20, borderBottom: `1px solid ${T.border}` }}>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 15 }}>
+                                                                <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : '#F5F5F7', padding: '15px', borderRadius: 20, textAlign: 'center' }}>
+                                                                    <div style={{ fontSize: 9, fontWeight: '1000', opacity: 0.5, marginBottom: 4 }}>PACHKADA QOLDI</div>
+                                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: T.text }}>{packCount} <span style={{ fontSize: 10, opacity: 0.5 }}>TA</span></div>
                                                                 </div>
-                                                                <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-                                                                    <motion.button
-                                                                        whileTap={{ scale: 0.9 }}
-                                                                        onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}
-                                                                        style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: `${T.accent}20`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                    ><QrCode size={16} /></motion.button>
-                                                                    <motion.button
-                                                                        whileTap={{ scale: 0.9 }}
-                                                                        onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
-                                                                        style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.05)', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                    ><Edit size={16} /></motion.button>
-                                                                    <motion.button
-                                                                        whileTap={{ scale: 0.9 }}
-                                                                        onClick={(e) => { e.stopPropagation(); handleDeleteProduct(item.id); }}
-                                                                        style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                    ><Trash2 size={16} /></motion.button>
+                                                                <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : '#F5F5F7', padding: '15px', borderRadius: 20, textAlign: 'center' }}>
+                                                                    <div style={{ fontSize: 9, fontWeight: '1000', opacity: 0.5, marginBottom: 4 }}>UMUMIY DONA</div>
+                                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: T.text }}>{totalUnits} <span style={{ fontSize: 10, opacity: 0.5 }}>TA</span></div>
+                                                                </div>
+                                                                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '15px', borderRadius: 20, textAlign: 'center' }}>
+                                                                    <div style={{ fontSize: 9, fontWeight: '1000', color: '#10B981', opacity: 0.8, marginBottom: 4 }}>SOTILDI</div>
+                                                                    <div style={{ fontSize: 18, fontWeight: '1000', color: '#10B981' }}>{soldQty} <span style={{ fontSize: 10, opacity: 0.5 }}>TA</span></div>
                                                                 </div>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </motion.div>
-                                ))}
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                                                                <div style={{ padding: '10px 15px', borderRadius: 16, border: `1px dashed ${T.border}`, textAlign: 'center' }}>
+                                                                    <div style={{ fontSize: 8, fontWeight: '900', opacity: 0.4 }}>TAN NARX (DONA)</div>
+                                                                    <div style={{ fontSize: 13, fontWeight: '1000', color: T.text, marginTop: 4 }}>{costPrice.toLocaleString()} <span style={{ fontSize: 8, opacity: 0.5 }}>UZS</span></div>
+                                                                </div>
+                                                                <div style={{ padding: '10px 15px', borderRadius: 16, border: `1px dashed ${T.border}`, textAlign: 'center' }}>
+                                                                    <div style={{ fontSize: 8, fontWeight: '900', opacity: 0.4 }}>SOTUV NARX (DONA)</div>
+                                                                    <div style={{ fontSize: 13, fontWeight: '1000', color: T.accent, marginTop: 4 }}>{salePrice.toLocaleString()} <span style={{ fontSize: 8, opacity: 0.5 }}>UZS</span></div>
+                                                                </div>
+                                                                <div style={{ padding: '10px 15px', borderRadius: 16, border: `1px solid ${T.accent}40`, background: `${T.accent}10`, textAlign: 'center' }}>
+                                                                    <div style={{ fontSize: 8, fontWeight: '900', color: T.accent, opacity: 0.8 }}>PACHKA NARXI</div>
+                                                                    <div style={{ fontSize: 13, fontWeight: '1000', color: T.accent, marginTop: 4 }}>{packPrice.toLocaleString()} <span style={{ fontSize: 8, opacity: 0.5 }}>UZS</span></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ padding: 15, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
+                                                            {p.items.map(item => (
+                                                                <div key={item.id} style={{ background: T.card, padding: '18px 15px', borderRadius: 20, border: `1px solid ${T.border}`, textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 15 }} onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}>
+                                                                    <div>
+                                                                        <div style={{ fontSize: 18, fontWeight: '1000', color: T.text }}>{item.size} <span style={{ fontSize: 10, opacity: 0.4 }}>RAZMER</span></div>
+                                                                        <div style={{ fontSize: 12, fontWeight: '900', color: T.accent, marginTop: 4 }}>{item.qty} DONA MAVJUD</div>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                                                                        <motion.button
+                                                                            whileTap={{ scale: 0.9 }}
+                                                                            onClick={(e) => { e.stopPropagation(); setShowPrint(getPrintItems([item])); }}
+                                                                            style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: `${T.accent}20`, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        ><QrCode size={16} /></motion.button>
+                                                                        <motion.button
+                                                                            whileTap={{ scale: 0.9 }}
+                                                                            onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
+                                                                            style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.05)', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        ><Edit size={16} /></motion.button>
+                                                                        <motion.button
+                                                                            whileTap={{ scale: 0.9 }}
+                                                                            onClick={(e) => { e.stopPropagation(); handleDeleteProduct(item.id); }}
+                                                                            style={{ flex: 1, height: 38, borderRadius: 12, border: 'none', background: 'rgba(255,100,100,0.1)', color: '#FF6464', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        ><Trash2 size={16} /></motion.button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    );
+                                })}
                         </div>
                     </motion.div>
                 )}
