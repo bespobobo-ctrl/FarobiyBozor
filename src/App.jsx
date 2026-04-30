@@ -346,7 +346,7 @@ export default function App() {
                         name, color, category: catName, size,
                         qty: numPachka,
                         price: uPrice,
-                        buy_price: (pCost / selectedSizes.length),
+                        buy_price: Math.round(pCost / selectedSizes.length),
                         shop_id: sid
                     });
                 });
@@ -597,7 +597,7 @@ export default function App() {
                 style={{ position: 'absolute', bottom: 30, right: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: 10, backdropFilter: 'blur(5px)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 6 }}
             >
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
-                <span style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 1.5, opacity: 0.5, color: '#fff' }}>v4.71 ELITE</span>
+                <span style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 1.5, opacity: 0.5, color: '#fff' }}>v4.80 ELITE</span>
             </motion.div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 10, position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', boxSizing: 'border-box' }}>
@@ -873,7 +873,7 @@ export default function App() {
                 </motion.div>
             </div>
             <div style={{ textAlign: 'center', padding: '35px 0', zIndex: 10, opacity: 0.2 }}>
-                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY BOZORI • v4.71 • 2026</div>
+                <div style={{ fontSize: 8, fontWeight: '1000', letterSpacing: 4 }}>FAROBIY BOZORI • v4.80 • 2026</div>
             </div>
         </div>
     );
@@ -889,7 +889,7 @@ export default function App() {
                     </div>
                     <div>
                         <div style={{ fontSize: 8, fontWeight: '1000', color: T.accent, letterSpacing: 4, opacity: 0.6 }}>{currentShop?.name || 'FAROBIY BOZORI'}</div>
-                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.71</small></h1>
+                        <h1 style={{ margin: 0, fontSize: 26, fontWeight: '900', letterSpacing: -0.8 }}>{currentShop?.dashboard_title || 'Boshqaruv'} <small style={{ fontSize: 10, opacity: 0.8, color: T.accent, fontWeight: '1000' }}>v4.80</small></h1>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
