@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://wwolqmhpzttpjhuwhqmh.supabase.co';
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3b2xxbWhwenR0cGpodXdocW1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzIzNjksImV4cCI6MjA5Mjg0ODM2OX0.MM84O72-nUjgxZC5I9jYPmBy1yLDmcjLC8d5VbZgFnY';
 const supabase = SUPABASE_URL ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 export default async function handler(req, res) {
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     try {
         const { callback_query, message } = req.body;
-        const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+        const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8742721286:AAH4dj2xfNUf2J8lY3W9ccxRw3LIUeFLyxw';
         
         if (!TOKEN) {
             console.error("Missing TELEGRAM_BOT_TOKEN");
