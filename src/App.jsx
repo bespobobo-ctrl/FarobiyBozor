@@ -151,6 +151,13 @@ export default function App() {
             try {
                 if (!isAuthenticated) return;
 
+                // CRITICAL: Ensure shop_id is loaded before fetching any store data
+                const sid = currentShop?.id;
+                if (!isSuperAdmin && (sid === undefined || sid === null)) {
+                    console.log("Waiting for shop context...");
+                    return;
+                }
+
                 // Professional Scoping: Use the db() helper to ensure shop_id is always applied
                 const { data: p, error: pErr } = await db('fb_products').select('*').order('id', { ascending: false });
                 if (pErr) throw pErr;
@@ -160,17 +167,15 @@ export default function App() {
                 if (lErr) throw lErr;
                 if (l) setLogs(l);
 
-                // Categories usually global or per shop - here we check if categories exist
-                const currentSid = currentShop?.id;
                 // Categories extraction: STRICTLY scoped to this shop only
-                const { data: c } = await supabase.from('fb_categories').select('name').eq('shop_id', currentSid);
+                const { data: c } = await supabase.from('fb_categories').select('name').eq('shop_id', sid || 0);
 
                 const dbCats = c ? c.map(x => x.name.trim()) : [];
                 const productCats = p ? [...new Set(p.map(x => (x.category || 'Nomaʼlum').trim()))] : [];
 
                 // Merge and unique
                 let allCats = [...new Set([...dbCats, ...productCats])].filter(Boolean);
-                if (allCats.length === 0) allCats = ['Umumiy']; // Ensure at least one category exists
+                if (allCats.length === 0) allCats = ['Umumiy'];
                 setCategories(allCats);
 
                 if (isSuperAdmin) {
@@ -325,35 +330,41 @@ export default function App() {
 
     const handleKirimSubmit = async () => {
         const { name, color, category, pachkaCount, unitPrice, selectedSizes, pachkaCost } = kirimForm;
-        if (!name || !pachkaCount || !unitPrice || selectedSizes.length === 0) return showToast("Barcha maydonlarni to'ldiring!");
+        if (!name || !pachkaCount || !unitPrice || selectedSizes.length === 0) return showToast("To'ldiring!");
 
         const sid = currentShop?.id;
-        if (sid === undefined) return showToast("Sessiya xatosi! Qayta kiring.");
+        if (!sid) return showToast("Do'kon tanlanmagan! ⚠️");
 
         try {
-            const numPachka = Number(pachkaCount) || 0;
-            const uPrice = Number(unitPrice) || 0;
-            const pCost = Number(pachkaCost) || 0;
+            const numPachka = Math.floor(Number(pachkaCount)) || 0;
+            const uPrice = Math.floor(Number(unitPrice)) || 0;
+            const pCost = Math.floor(Number(pachkaCost)) || 0;
 
             if (numPachka <= 0) return showToast("Soni noto'g'ri!");
 
             const newProductsRows = [];
-            const catName = category || categories[0] || 'Umumiy';
+            const catName = (category || categories[0] || 'Umumiy').trim();
 
             if (kirimForm.type === 'pachka') {
+                const costPerItem = Math.floor(pCost / selectedSizes.length);
                 selectedSizes.forEach(size => {
                     newProductsRows.push({
-                        name, color, category: catName, size,
+                        name: name.trim(),
+                        color: color.trim(),
+                        category: catName,
+                        size: String(size),
                         qty: numPachka,
                         price: uPrice,
-                        buy_price: Math.round(pCost / selectedSizes.length),
+                        buy_price: costPerItem,
                         shop_id: sid
                     });
                 });
             } else {
                 newProductsRows.push({
-                    name, color, category: catName,
-                    size: selectedSizes[0] || 'N/A',
+                    name: name.trim(),
+                    color: color.trim(),
+                    category: catName,
+                    size: String(selectedSizes[0] || 'N/A'),
                     qty: numPachka,
                     price: uPrice,
                     buy_price: pCost,
@@ -361,42 +372,39 @@ export default function App() {
                 });
             }
 
-            // Professional approach: Direct insert with explicit shop_id
+            // DB WRITE 1: Products
             const { data: insertedProducts, error: pErr } = await supabase.from('fb_products').insert(newProductsRows).select();
-            if (pErr) throw new Error("Mahsulot: " + pErr.message);
+            if (pErr) throw new Error("Omborga yozishda xato: " + pErr.message);
 
-            const totalAmount = kirimForm.type === 'pachka' ? Number(pachkaCost) * numPachka : Number(pachkaCost) * numPachka;
+            const totalAmount = Math.floor(pCost * numPachka);
 
+            // DB WRITE 2: Logs
             const { error: lErr } = await supabase.from('fb_logs').insert([{
                 type: 'KIRIM',
-                name: name,
-                qty: newProductsRows.length,
+                name: name.trim(),
+                qty: numPachka,
                 amount: totalAmount,
-                shop_id: sid
+                shop_id: sid,
+                date: new Date().toISOString()
             }]);
-            if (lErr) console.error("Log error (Non-critical):", lErr.message);
 
-            // Update local state immediately with database-guaranteed data if available, or fallback
-            const finalProducts = (insertedProducts && insertedProducts.length > 0) ? insertedProducts : newProductsRows.map((r, i) => ({ ...r, id: Date.now() + i }));
-            setProducts(prev => [...finalProducts, ...prev]);
+            if (lErr) console.error("Log error:", lErr.message);
 
-            // Construct and add log
-            const newLog = {
-                id: Date.now(),
-                type: 'KIRIM',
-                name: name,
-                qty: newProductsRows.length,
-                amount: totalAmount,
-                date: new Date(),
-                shop_id: sid
-            };
-            setLogs(prev => [newLog, ...prev]);
+            // SYNC UI
+            if (insertedProducts) {
+                setProducts(prev => [...insertedProducts, ...prev]);
+            }
+
+            // Re-fetch to be 100% sure after a major write
+            const { data: latestLogs } = await db('fb_logs').select('*').order('id', { ascending: false }).limit(50);
+            if (latestLogs) setLogs(latestLogs);
 
             setShowKirim(false);
-            setShowPrint(getPrintItems(finalProducts));
+            if (insertedProducts) setShowPrint(getPrintItems(insertedProducts));
             showToast("Muvaffaqiyatli saqlandi! ✅");
         } catch (err) {
-            showToast("Xatolik: " + err.message);
+            console.error("Critical Save Error:", err);
+            showToast(err.message);
         }
     };
     const deleteLog = async (id) => {
@@ -1651,7 +1659,17 @@ export default function App() {
                                                 const n = document.getElementById('expName').value;
                                                 const a = document.getElementById('expAmount').value;
                                                 if (!n || !a) return showToast("To'ldiring!");
-                                                const { data, error } = await supabase.from('fb_logs').insert([{ type: 'EXPENSE', name: n, amount: Number(a), date: new Date().toISOString(), shop_id: currentShop?.id || 0 }]).select();
+                                                const sid = currentShop?.id;
+                                                if (!isSuperAdmin && !sid) return showToast("Sessiya xatosi!");
+
+                                                const { data, error } = await supabase.from('fb_logs').insert([{
+                                                    type: 'EXPENSE',
+                                                    name: n,
+                                                    amount: Number(a),
+                                                    date: new Date().toISOString(),
+                                                    shop_id: sid
+                                                }]).select();
+
                                                 if (error) return showToast("Xatolik!");
                                                 setLogs([data[0], ...logs]);
                                                 document.getElementById('expName').value = '';
